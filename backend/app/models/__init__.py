@@ -1,0 +1,33 @@
+from app.models.models import (
+    AcademicGrade,
+    AdmissionBlockMapping,
+    AssessmentAnswer,
+    AuditLog,
+    ConsentRecord,
+    ImportBatch,
+    Major,
+    NationalReference,
+    QuestionnaireVersion,
+    RecommendationRun,
+    StageStatus,
+    StagedMajorRecord,
+    User,
+    UserRole,
+)
+
+__all__ = [
+    "AcademicGrade",
+    "AdmissionBlockMapping",
+    "AssessmentAnswer",
+    "AuditLog",
+    "ConsentRecord",
+    "ImportBatch",
+    "Major",
+    "NationalReference",
+    "QuestionnaireVersion",
+    "RecommendationRun",
+    "StageStatus",
+    "StagedMajorRecord",
+    "User",
+    "UserRole",
+]
