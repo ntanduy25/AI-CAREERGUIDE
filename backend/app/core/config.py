@@ -5,7 +5,7 @@ from pydantic import Field, field_validator
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"
@@ -40,10 +40,11 @@ class Settings(BaseSettings):
 
     # AI & Embedding Services
     OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.xah.io/v1"
     TAVILY_API_KEY: str = ""
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSION: int = 1536
-    LLM_MODEL: str = "gpt-4o-mini"
+    LLM_MODEL: str = "deepseek-4.1-flash-ckey"
 
     # 3-Pillar Scoring Weights (Default: RIASEC 0.45, Academic 0.35, Preference 0.20)
     WEIGHT_RIASEC: float = 0.45

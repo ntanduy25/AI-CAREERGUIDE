@@ -25,15 +25,17 @@ interface StudentProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultTab?: 'profile' | 'privacy';
+  initialTab?: 'profile' | 'privacy';
 }
 
 export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   isOpen,
   onClose,
-  defaultTab = 'profile',
+  defaultTab,
+  initialTab,
 }) => {
   const { user, updateProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<'profile' | 'privacy'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<'profile' | 'privacy'>(initialTab || defaultTab || 'profile');
 
   // Profile form state initialized from current user
   const [fullName, setFullName] = useState(user?.full_name || '');
@@ -69,7 +71,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
       profile: updatedDetails,
     });
 
-    setSavedNotice('Đã cập nhật hồ sơ cá nhân thành công!');
+    setSavedNotice('Đã cập nhật hồ sơ cá nhân thành công.');
     setTimeout(() => {
       setSavedNotice(null);
     }, 2500);
@@ -92,7 +94,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
       },
       privacy_compliance: {
         pii_protection: 'ENABLED_AES_256',
-        law_compliance: 'Decree 13/2023/ND-CP & Law 91/2015/QH13',
+        law_compliance: 'Decree 13/2023/ND-CP & Law 91/2025/QH15',
         sent_to_ai_models: false,
       },
       exported_at: new Date().toISOString(),
@@ -108,64 +110,64 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-2xl max-h-[85vh] sm:max-h-[88vh] flex flex-col overflow-hidden my-auto">
-        {/* Header (Never Shrink, Always on Top) */}
-        <div className="shrink-0 p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-50 to-indigo-50/30">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-xs overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-modal border border-slate-200 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden my-auto animate-in fade-in duration-150">
+        {/* Header */}
+        <div className="shrink-0 p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-bold text-base sm:text-lg shadow-md shadow-brand-500/20 shrink-0">
+            <div className="w-9 h-9 rounded-md bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
               {fullName ? fullName.charAt(0).toUpperCase() : 'H'}
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900">
-                Hồ Sơ Học Sinh & Bảo Vệ Dữ Liệu
+              <h2 className="text-base font-bold text-slate-900">
+                Hồ Sơ Học Sinh & Quyền Riêng Tư
               </h2>
               <p className="text-xs text-slate-500">
-                Quản lý thông tin cá nhân & cam kết không tiết lộ thông tin cho AI
+                Quản lý thông tin học tập và thiết lập bảo vệ dữ liệu theo Luật 91/2025/QH15
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
+            className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition-colors shrink-0"
             title="Đóng modal"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Navigation Tabs (Never Shrink) */}
-        <div className="shrink-0 flex border-b border-slate-100 px-4 sm:px-6 bg-white overflow-x-auto">
+        {/* Navigation Tabs */}
+        <div className="shrink-0 flex border-b border-slate-200 px-5 bg-white">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`py-3 px-4 text-xs font-bold border-b-2 flex items-center space-x-2 transition-all shrink-0 ${
+            className={`py-3 px-3 text-xs font-semibold border-b-2 flex items-center space-x-2 transition-colors ${
               activeTab === 'profile'
-                ? 'border-brand-600 text-brand-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
             <User className="w-4 h-4" />
-            <span>Thông Tin Cá Nhân & Học Tập</span>
+            <span>Thông tin Học sinh</span>
           </button>
 
           <button
             onClick={() => setActiveTab('privacy')}
-            className={`py-3 px-4 text-xs font-bold border-b-2 flex items-center space-x-2 transition-all shrink-0 ${
+            className={`py-3 px-3 text-xs font-semibold border-b-2 flex items-center space-x-2 transition-colors ${
               activeTab === 'privacy'
-                ? 'border-emerald-600 text-emerald-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-600 hover:text-slate-900'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>🛡️ Bảo Mật & Cô Lập AI (Zero PII)</span>
+            <ShieldCheck className="w-4 h-4" />
+            <span>Bảo vệ Dữ liệu & Khử khuẩn PII</span>
           </button>
         </div>
 
-        {/* Content Body (Flex-1 with min-h-0 and internal scroll) */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-5">
+        {/* Content Body */}
+        <div className="p-5 overflow-y-auto flex-1 min-h-0 space-y-4">
           {savedNotice && (
-            <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center space-x-2 animate-in fade-in">
+            <div className="p-3 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{savedNotice}</span>
             </div>
@@ -177,9 +179,9 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Full name */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                  <label className="text-xs font-medium text-slate-700 flex items-center space-x-1.5">
                     <User className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Họ và Tên Học Sinh</span>
+                    <span>Họ và Tên</span>
                   </label>
                   <input
                     type="text"
@@ -187,13 +189,13 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                     onChange={(e) => setFullName(e.target.value)}
                     required
                     placeholder="Nguyễn Văn A"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                   />
                 </div>
 
                 {/* Email (Readonly) */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                  <label className="text-xs font-medium text-slate-700 flex items-center space-x-1.5">
                     <Mail className="w-3.5 h-3.5 text-slate-400" />
                     <span>Email Tài Khoản</span>
                   </label>
@@ -201,30 +203,29 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                     type="email"
                     value={user?.email || ''}
                     disabled
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs bg-slate-50 text-slate-500 cursor-not-allowed"
+                    className="w-full px-3 py-2 rounded-md border border-slate-200 text-xs bg-slate-50 text-slate-500 cursor-not-allowed"
                   />
                 </div>
 
                 {/* Phone */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                  <label className="text-xs font-medium text-slate-700 flex items-center space-x-1.5">
                     <Phone className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Số Điện Thoại Phụ Huynh / Học Sinh</span>
+                    <span>Số Điện Thoại Liên Hệ</span>
                   </label>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0912 345 678"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                   />
-                  <p className="text-[10px] text-slate-400">Chỉ dùng xác thực & thông báo kết quả hướng nghiệp nội bộ</p>
                 </div>
 
                 {/* Date of Birth & Gender */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 flex items-center space-x-1">
+                    <label className="text-xs font-medium text-slate-700 flex items-center space-x-1">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
                       <span>Ngày Sinh</span>
                     </label>
@@ -232,15 +233,15 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                       type="date"
                       value={dob}
                       onChange={(e) => setDob(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                      className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Giới Tính</label>
+                    <label className="text-xs font-medium text-slate-700">Giới Tính</label>
                     <select
                       value={gender}
                       onChange={(e) => setGender(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white"
+                      className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"
                     >
                       <option value="Nam">Nam</option>
                       <option value="Nữ">Nữ</option>
@@ -251,7 +252,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
                 {/* High School Name */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                  <label className="text-xs font-medium text-slate-700 flex items-center space-x-1.5">
                     <Building className="w-3.5 h-3.5 text-slate-400" />
                     <span>Trường THPT Đang Học</span>
                   </label>
@@ -260,13 +261,13 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                     value={schoolName}
                     onChange={(e) => setSchoolName(e.target.value)}
                     placeholder="THPT Chuyên Lê Hồng Phong"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                   />
                 </div>
 
                 {/* City / Province */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                  <label className="text-xs font-medium text-slate-700 flex items-center space-x-1.5">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
                     <span>Tỉnh / Thành Phố</span>
                   </label>
@@ -275,20 +276,20 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                     value={cityProvince}
                     onChange={(e) => setCityProvince(e.target.value)}
                     placeholder="Hà Nội, TP.HCM, Đà Nẵng..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                   />
                 </div>
 
                 {/* Grade Level */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                  <label className="text-xs font-medium text-slate-700 flex items-center space-x-1.5">
                     <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Khối Lớp Hiện Tại</span>
+                    <span>Khối Lớp</span>
                   </label>
                   <select
                     value={gradeLevel}
                     onChange={(e) => setGradeLevel(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white font-semibold"
+                    className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"
                   >
                     <option value="Lớp 10">Lớp 10 (Chuẩn bị chọn tổ hợp môn)</option>
                     <option value="Lớp 11">Lớp 11 (Tập trung năng lực học thuật)</option>
@@ -299,11 +300,11 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
                 {/* Target Admission Block */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Tổ Hợp Thi Dự Kiến</label>
+                  <label className="text-xs font-medium text-slate-700">Tổ Hợp Thi Mục Tiêu</label>
                   <select
                     value={targetBlock}
                     onChange={(e) => setTargetBlock(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white font-semibold"
+                    className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"
                   >
                     <option value="A00 (Toán, Lý, Hóa)">A00 (Toán, Lý, Hóa)</option>
                     <option value="A01 (Toán, Lý, Tiếng Anh)">A01 (Toán, Lý, Tiếng Anh)</option>
@@ -317,32 +318,32 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
               {/* Career Goal */}
               <div className="space-y-1 pt-1">
-                <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Ước Mơ Nghề Nghiệp / Nguyện Vọng Của Bạn</span>
+                <label className="text-xs font-medium text-slate-700 flex items-center space-x-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Nguyện vọng nghề nghiệp quan tâm</span>
                 </label>
                 <input
                   type="text"
                   value={careerGoal}
                   onChange={(e) => setCareerGoal(e.target.value)}
-                  placeholder="Ví dụ: Kỹ sư Phần mềm, Bác sĩ Đa khoa, Chuyên viên Tài chính..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none font-medium"
+                  placeholder="Ví dụ: Kỹ sư Phần mềm, Bác sĩ Đa khoa, Chuyên viên Phân tích Dữ liệu..."
+                  className="w-full px-3 py-2 rounded-md border border-slate-300 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-4 flex items-center justify-between border-t border-slate-100">
-                <div className="flex items-center space-x-2 text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-3 py-1.5 rounded-xl">
-                  <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Dữ liệu được cô lập bảo mật nội bộ</span>
+              <div className="pt-4 flex items-center justify-between border-t border-slate-200">
+                <div className="flex items-center space-x-1.5 text-xs text-slate-500">
+                  <Lock className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Dữ liệu được lưu trữ mã hóa nội bộ</span>
                 </div>
 
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-500/25 flex items-center space-x-2 transition-all"
+                  className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm flex items-center space-x-1.5 transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  <span>Lưu Hồ Sơ Học Sinh</span>
+                  <span>Lưu thay đổi</span>
                 </button>
               </div>
             </form>
@@ -350,87 +351,69 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
           {/* TAB 2: PRIVACY & ZERO PII TO AI */}
           {activeTab === 'privacy' && (
-            <div className="space-y-5">
-              {/* Privacy Shield Banner */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 space-y-3">
-                <div className="flex items-center space-x-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-emerald-900">
-                      Hàng Rào Bảo Vệ Quyền Riêng Tư (AI Data Shield Guardrails)
-                    </h3>
-                    <p className="text-[11px] text-emerald-700">
-                      Tuân thủ nghiêm ngặt Nghị định 13/2023/NĐ-CP & Luật An toàn thông tin mạng số 91/2015/QH13
-                    </p>
-                  </div>
+            <div className="space-y-4">
+              <div className="p-4 rounded-md bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0" />
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Nguyên tắc Bảo vệ Dữ liệu Học sinh
+                  </h3>
                 </div>
-
-                <p className="text-xs text-emerald-800 leading-relaxed">
-                  Hệ thống <strong>AI CareerGuide</strong> cam kết bảo vệ thông tin học sinh ở mức cao nhất. Toàn bộ thông tin cá nhân của bạn được lưu trữ độc lập và <strong>TUYỆT ĐỐI KHÔNG BAO GIỜ được gửi cho AI, mô hình ngôn ngữ lớn (LLM), hay chia sẻ cho bất kỳ bên thứ ba nào</strong>.
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Hệ thống tuân thủ nghiêm ngặt Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 và Nghị định 13/2023/NĐ-CP.
+                  Thông tin định danh cá nhân (PII) được tách biệt hoàn toàn khỏi các vector số học dùng trong thuật toán đề xuất.
                 </p>
               </div>
 
-              {/* Data Flow Comparison Table */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                  Cơ Chế Phân Tách Dữ Liệu Rõ Ràng:
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Column 1: PII - Strictly Isolated */}
-                  <div className="p-4 rounded-2xl bg-rose-50/60 border border-rose-200 space-y-2.5">
-                    <div className="flex items-center space-x-2 text-rose-800 font-extrabold text-xs">
-                      <EyeOff className="w-4 h-4 text-rose-600" />
-                      <span>Thông Tin Định Danh Cá Nhân (PII)</span>
-                    </div>
-                    <ul className="text-[11px] text-rose-700 space-y-1 font-medium list-disc list-inside">
-                      <li>Họ và tên học sinh</li>
-                      <li>Số điện thoại phụ huynh & học sinh</li>
-                      <li>Địa chỉ Email cá nhân</li>
-                      <li>Trường THPT & Lớp học</li>
-                    </ul>
-                    <div className="pt-1 border-t border-rose-200/80 text-[10px] text-rose-800 font-bold flex items-center space-x-1">
-                      <Lock className="w-3 h-3 text-rose-600 shrink-0" />
-                      <span>Mã hóa AES-256 & không bao giờ truyền cho AI</span>
-                    </div>
+              {/* Comparison */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-md bg-white border border-slate-200 space-y-2">
+                  <div className="flex items-center space-x-2 text-slate-900 font-semibold text-xs">
+                    <EyeOff className="w-4 h-4 text-slate-500" />
+                    <span>Dữ liệu Định danh (Bảo vệ tuyệt đối)</span>
                   </div>
+                  <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside">
+                    <li>Họ và tên học sinh</li>
+                    <li>Số điện thoại liên lạc</li>
+                    <li>Địa chỉ email tài khoản</li>
+                    <li>Trường THPT & địa phương</li>
+                  </ul>
+                  <p className="text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+                    Mã hóa chuẩn AES-256, không gửi cho bên thứ ba.
+                  </p>
+                </div>
 
-                  {/* Column 2: What AI Actually Sees (Pure Anonymous Vector) */}
-                  <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-2.5">
-                    <div className="flex items-center space-x-2 text-indigo-900 font-extrabold text-xs">
-                      <Sparkles className="w-4 h-4 text-indigo-600" />
-                      <span>Dữ Liệu Thuần Số Học Đưa Vào Thuật Toán</span>
-                    </div>
-                    <ul className="text-[11px] text-indigo-800 space-y-1 font-medium list-disc list-inside">
-                      <li>Vector Holland 6 chiều: (R, I, A, S, E, C)</li>
-                      <li>Điểm số chuẩn hóa Z-Score: (vd: Toán 9.0)</li>
-                      <li>Thiên hướng nhận thức: Mã hóa dạng A/B/C/D</li>
-                      <li>Hoàn toàn 100% ẩn danh, không chứa danh tính</li>
-                    </ul>
-                    <div className="pt-1 border-t border-indigo-200/80 text-[10px] text-indigo-800 font-bold flex items-center space-x-1">
-                      <CheckCircle2 className="w-3 h-3 text-indigo-600 shrink-0" />
-                      <span>Không thể truy ngược ra danh tính người dùng</span>
-                    </div>
+                <div className="p-4 rounded-md bg-white border border-slate-200 space-y-2">
+                  <div className="flex items-center space-x-2 text-slate-900 font-semibold text-xs">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    <span>Dữ liệu Xử lý Thuật toán (Ẩn danh 100%)</span>
                   </div>
+                  <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside">
+                    <li>Vector RIASEC (R, I, A, S, E, C)</li>
+                    <li>Điểm chuẩn hóa Z-score môn học</li>
+                    <li>Mã phong cách nhận thức (A/B/C/D)</li>
+                    <li>Hoàn toàn không chứa danh tính</li>
+                  </ul>
+                  <p className="text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+                    Được tính toán tất định theo trọng số công khai.
+                  </p>
                 </div>
               </div>
 
-              {/* Data Rights Actions */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+              {/* Data Export Action */}
+              <div className="pt-4 flex items-center justify-between border-t border-slate-200">
                 <button
                   type="button"
                   onClick={handleExportData}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center space-x-2 transition-all"
+                  className="px-3.5 py-2 rounded-md bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-medium text-xs flex items-center space-x-1.5 transition-colors shadow-xs"
                 >
                   <Download className="w-4 h-4 text-slate-500" />
-                  <span>Tải Về Toàn Bộ Dữ Liệu Hồ Sơ (JSON)</span>
+                  <span>Xuất bản sao dữ liệu (JSON)</span>
                 </button>
 
-                <div className="text-[11px] text-slate-400 text-center sm:text-right">
-                  Quyền được bảo vệ & xóa dữ liệu theo Luật số 91/2015/QH13
-                </div>
+                <span className="text-[11px] text-slate-500">
+                  Quyền tự quyết dữ liệu theo Điều 9 Luật 91/2025/QH15
+                </span>
               </div>
             </div>
           )}

@@ -74,58 +74,99 @@ async def list_majors(
 ) -> List[Dict[str, Any]]:
     """
     Retrieves MOET Level-IV majors catalog from PostgreSQL.
-    Automatically self-heals and seeds the 108 majors from seed JSON if table is empty.
+    Automatically self-heals and seeds the 108 majors from seed JSON if table is empty
+    or if database is unreachable.
     """
-    query = (
-        select(Major)
-        .where(Major.is_active == True)
-        .options(
-            selectinload(Major.careers),
-            selectinload(Major.subject_blocks).selectinload(MajorSubjectBlock.subject_block),
+    try:
+        query = (
+            select(Major)
+            .where(Major.is_active == True)
+            .options(
+                selectinload(Major.careers),
+                selectinload(Major.subject_blocks).selectinload(MajorSubjectBlock.subject_block),
+            )
         )
-    )
+        if search:
+            query = query.where(Major.name.ilike(f"%{search}%") | Major.major_code.ilike(f"%{search}%"))
+        if category and category.upper() != "ALL":
+            query = query.where(Major.category == category)
+
+        query = query.order_by(Major.major_code.asc()).limit(limit).offset(offset)
+        result = await db.execute(query)
+        majors = list(result.scalars().all())
+
+        # Auto-seed if database table is completely empty
+        if len(majors) == 0 and not search and not category:
+            seed_data = load_seed_majors()
+            if seed_data:
+                logger.info("Majors table empty. Auto-seeding 108 MOET Level-IV majors into PostgreSQL...")
+                await bulk_sync_majors(db, seed_data)
+                result = await db.execute(query)
+                majors = list(result.scalars().all())
+
+        if majors:
+            return [format_major_dict(m) for m in majors]
+    except Exception as exc:
+        logger.warning("Database unavailable in list_majors (%s), falling back to seed JSON", exc)
+
+    # Safe fallback to seed JSON (108 majors)
+    seed_data = load_seed_majors()
     if search:
-        query = query.where(Major.name.ilike(f"%{search}%") | Major.major_code.ilike(f"%{search}%"))
+        s_lower = search.lower()
+        seed_data = [
+            m for m in seed_data
+            if s_lower in m.get("name", "").lower() or s_lower in m.get("major_code", "").lower()
+        ]
     if category and category.upper() != "ALL":
-        query = query.where(Major.category == category)
+        seed_data = [m for m in seed_data if m.get("category") == category]
 
-    query = query.order_by(Major.major_code.asc()).limit(limit).offset(offset)
-    result = await db.execute(query)
-    majors = list(result.scalars().all())
-
-    # Auto-seed if database table is completely empty
-    if len(majors) == 0 and not search and not category:
-        seed_data = load_seed_majors()
-        if seed_data:
-            logger.info("Majors table empty. Auto-seeding 108 MOET Level-IV majors into PostgreSQL...")
-            await bulk_sync_majors(db, seed_data)
-            result = await db.execute(query)
-            majors = list(result.scalars().all())
-
-    return [format_major_dict(m) for m in majors]
+    return seed_data[offset : offset + limit]
 
 
 async def get_major_by_code(db: AsyncSession, major_code: str) -> Optional[Dict[str, Any]]:
-    query = (
-        select(Major)
-        .where(Major.major_code == major_code)
-        .options(
-            selectinload(Major.careers),
-            selectinload(Major.subject_blocks).selectinload(MajorSubjectBlock.subject_block),
-            selectinload(Major.major_skills).selectinload(MajorSkill.skill),
+    try:
+        query = (
+            select(Major)
+            .where(Major.major_code == major_code)
+            .options(
+                selectinload(Major.careers),
+                selectinload(Major.subject_blocks).selectinload(MajorSubjectBlock.subject_block),
+                selectinload(Major.major_skills).selectinload(MajorSkill.skill),
+            )
         )
-    )
-    result = await db.execute(query)
-    major = result.scalar_one_or_none()
-    if not major:
-        return None
-    return format_major_dict(major)
+        result = await db.execute(query)
+        major = result.scalar_one_or_none()
+        if major:
+            return format_major_dict(major)
+    except Exception as exc:
+        logger.warning("Database unavailable in get_major_by_code (%s), falling back to seed JSON", exc)
+
+    seed_data = load_seed_majors()
+    for m in seed_data:
+        if m.get("major_code") == major_code:
+            return m
+    return None
 
 
-async def list_subject_blocks(db: AsyncSession) -> List[SubjectBlock]:
-    query = select(SubjectBlock).order_by(SubjectBlock.block_code.asc())
-    result = await db.execute(query)
-    return list(result.scalars().all())
+async def list_subject_blocks(db: AsyncSession) -> List[Any]:
+    try:
+        query = select(SubjectBlock).order_by(SubjectBlock.block_code.asc())
+        result = await db.execute(query)
+        blocks = list(result.scalars().all())
+        if blocks:
+            return blocks
+    except Exception as exc:
+        logger.warning("Database unavailable in list_subject_blocks (%s), falling back to static blocks", exc)
+
+    return [
+        {"block_code": "A00", "name": "Toán, Vật lí, Hóa học", "subjects": ["Toán", "Vật lí", "Hóa học"], "national_mean": 20.85, "national_std": 3.25},
+        {"block_code": "A01", "name": "Toán, Vật lí, Tiếng Anh", "subjects": ["Toán", "Vật lí", "Tiếng Anh"], "national_mean": 20.15, "national_std": 3.10},
+        {"block_code": "B00", "name": "Toán, Hóa học, Sinh học", "subjects": ["Toán", "Hóa học", "Sinh học"], "national_mean": 19.80, "national_std": 3.40},
+        {"block_code": "C00", "name": "Ngữ văn, Lịch sử, Địa lí", "subjects": ["Ngữ văn", "Lịch sử", "Địa lí"], "national_mean": 21.50, "national_std": 3.35},
+        {"block_code": "D01", "name": "Toán, Ngữ văn, Tiếng Anh", "subjects": ["Toán", "Ngữ văn", "Tiếng Anh"], "national_mean": 19.20, "national_std": 3.15},
+        {"block_code": "D07", "name": "Toán, Hóa học, Tiếng Anh", "subjects": ["Toán", "Hóa học", "Tiếng Anh"], "national_mean": 20.40, "national_std": 3.20},
+        {"block_code": "D08", "name": "Toán, Sinh học, Tiếng Anh", "subjects": ["Toán", "Sinh học", "Tiếng Anh"], "national_mean": 19.90, "national_std": 3.30},
+    ]
 
 
 async def list_careers_by_major(db: AsyncSession, major_id: uuid.UUID) -> List[Career]:

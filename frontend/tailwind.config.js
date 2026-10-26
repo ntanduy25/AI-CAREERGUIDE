@@ -8,38 +8,33 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#EEF2FF',
-          100: '#E0E7FF',
-          200: '#C7D2FE',
-          300: '#A5B4FC',
-          400: '#818CF8',
-          500: '#6366F1', // Primary Indigo
-          600: '#4F46E5',
-          700: '#4338CA',
-          800: '#3730A3',
-          900: '#312E81',
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#2563EB', // Primary Core Blue
+          600: '#1D4ED8',
+          700: '#1E40AF',
+          800: '#1E3A8A',
+          900: '#0F172A',
         },
-        gamify: {
-          gold: '#F59E0B',
-          amber: '#D97706',
-          green: '#10B981',
-          emerald: '#059669',
-          coral: '#F43F5E',
-          sky: '#0EA5E9',
-          violet: '#8B5CF6',
-        }
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'Be Vietnam Pro', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'gamify': '0 10px 25px -5px rgba(99, 102, 241, 0.15), 0 8px 10px -6px rgba(99, 102, 241, 0.1)',
-        'gamify-hover': '0 20px 30px -10px rgba(99, 102, 241, 0.25)',
-        'badge': '0 4px 14px 0 rgba(245, 158, 11, 0.39)',
+        'xs': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px -1px rgba(0, 0, 0, 0.07)',
+        'modal': '0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05)',
       },
       borderRadius: {
+        'xs': '0.25rem',
+        'sm': '0.375rem',
+        'md': '0.5rem',
+        'lg': '0.625rem',
+        'xl': '0.75rem',
         '2xl': '1rem',
-        '3xl': '1.5rem',
       }
     },
   },

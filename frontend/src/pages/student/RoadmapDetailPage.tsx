@@ -17,13 +17,20 @@ import {
   X,
   ChevronRight,
   GraduationCap,
+  BrainCircuit,
+  MessageSquare,
 } from 'lucide-react';
-import { MajorRoadmap, GuidancePersonalizationResponse, RoadmapMilestone } from '../../types';
-import { recommendationService, roadmapStorageService, taxonomyService } from '../../services/careerServices';
+import { MajorRoadmap, GuidancePersonalizationResponse, RoadmapMilestone, RIASECVector } from '../../types';
+import { recommendationService, roadmapStorageService, taxonomyService, diagnosticService } from '../../services/careerServices';
 import { MajorItem } from '../../data/defaultTaxonomy';
+import { AIExplanationModal } from '../../components/ai/AIExplanationModal';
+import { useAuth } from '../../context/AuthContext';
+import { getScopedItem } from '../../utils/userStorage';
 
 export const RoadmapDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userId = user?.id || null;
   const { major_code } = useParams<{ major_code: string }>();
   const code = major_code || '7480201';
 
@@ -32,11 +39,49 @@ export const RoadmapDetailPage: React.FC = () => {
   const [completedActions, setCompletedActions] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [isSavedInRoadmaps, setIsSavedInRoadmaps] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   // Switch Major Modal state
   const [isSwitchMajorModalOpen, setIsSwitchMajorModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+
+  // Resolved test results without PII
+  const riasecScores = React.useMemo<Record<string, number> | undefined>(() => {
+    try {
+      const raw = getScopedItem('calculated_vector', userId);
+      return raw ? JSON.parse(raw) : undefined;
+    } catch {
+      return undefined;
+    }
+  }, [userId]);
+
+  const grades = React.useMemo<Record<string, number> | undefined>(() => {
+    try {
+      const raw = getScopedItem('student_grades', userId);
+      if (raw) {
+        const p = JSON.parse(raw);
+        return {
+          'Toán': p.math || 0,
+          'Vật lý': p.physics || 0,
+          'Hóa học': p.chemistry || 0,
+          'Sinh học': p.biology || 0,
+          'Tin học': p.informatics || 0,
+          'Ngữ văn': p.literature || 0,
+          'Lịch sử': p.history || 0,
+          'Địa lý': p.geography || 0,
+          'Tiếng Anh': p.english || 0,
+        };
+      }
+    } catch {
+      // fallback empty
+    }
+    return undefined;
+  }, [userId]);
+
+  const diagnosticSkills = React.useMemo<string[]>(() => {
+    return diagnosticService.getMasteredSkillCodes(userId);
+  }, [userId]);
 
   const allMajors = taxonomyService.getAllOfficialMoetMajors();
   const categories = ['ALL', ...Array.from(new Set(allMajors.map((m) => m.category)))];
@@ -132,8 +177,8 @@ export const RoadmapDetailPage: React.FC = () => {
   if (loading || !roadmap) {
     return (
       <div className="max-w-4xl mx-auto py-20 text-center space-y-4">
-        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-sm font-bold text-slate-600">Đang truy xuất lộ trình chuẩn hóa ({code})...</p>
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs font-semibold text-slate-600">Đang truy xuất dữ liệu lộ trình ngành {code}...</p>
       </div>
     );
   }
@@ -144,75 +189,99 @@ export const RoadmapDetailPage: React.FC = () => {
   const progressPct = totalActions > 0 ? Math.round((completedCount / totalActions) * 100) : 0;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Top Bar with Navigation & Actions */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center space-x-3 text-xs font-bold no-print mb-1">
-            <Link to="/roadmaps" className="inline-flex items-center space-x-1 text-slate-500 hover:text-brand-600">
+          <div className="flex items-center space-x-2 text-xs text-slate-500 no-print mb-1">
+            <Link to="/roadmaps" className="inline-flex items-center space-x-1 hover:text-blue-600">
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Danh Sách Lộ Trình</span>
+              <span>Danh sách lộ trình</span>
             </Link>
-            <span className="text-slate-300">•</span>
-            <Link to="/guidance?tab=recommendation" className="text-slate-500 hover:text-brand-600">
-              Định Hướng Nghề Nghiệp
+            <span>/</span>
+            <Link to="/guidance?tab=recommendation" className="hover:text-blue-600">
+              Định hướng nghề nghiệp
             </Link>
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="font-mono text-xs font-black text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
+            <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
               {roadmap.major_code}
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
-              {roadmap.is_fallback ? 'Bản dự phòng chuẩn hóa' : 'Đã duyệt chính thức (APPROVED)'}
+            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-medium border border-slate-200">
+              {roadmap.is_fallback ? 'Bản chuẩn hóa dự phòng' : 'Đã thẩm định chính thức'}
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
             {roadmap.title}
           </h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 no-print">
+          <button
+            type="button"
+            onClick={() => setIsAIModalOpen(true)}
+            className="inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold text-xs border border-purple-200 shadow-xs transition-colors cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            <span>Giải thích AI (XAI)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent('open_ai_counselor_chat', {
+                  detail: { majorCode: code, majorName: roadmap.title },
+                })
+              );
+            }}
+            className="inline-flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs border border-blue-200 shadow-xs transition-colors cursor-pointer"
+          >
+            <BrainCircuit className="w-3.5 h-3.5 text-blue-600" />
+            <span>Hỏi Cố vấn AI</span>
+          </button>
+
           {isSavedInRoadmaps ? (
-            <span className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
+            <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-emerald-50 text-emerald-800 text-xs font-medium border border-emerald-200">
               <Check className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Đã lưu vào Lộ trình</span>
+              <span>Đang theo dõi</span>
             </span>
           ) : (
             <button
               type="button"
               onClick={handleSaveToMyRoadmaps}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all"
+              className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>+ Lưu Vào Lộ Trình Của Tôi</span>
+              <Check className="w-3.5 h-3.5" />
+              <span>Lưu vào lộ trình</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={() => setIsSwitchMajorModalOpen(true)}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-indigo-50 hover:bg-indigo-100 text-brand-700 font-bold text-xs border border-indigo-200 transition-all shadow-xs"
+            className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs border border-slate-300 transition-colors shadow-xs cursor-pointer"
           >
-            <Compass className="w-4 h-4 text-brand-600" />
-            <span>Đổi Sang Ngành Khác</span>
+            <Compass className="w-3.5 h-3.5 text-slate-500" />
+            <span>Đổi ngành khác</span>
           </button>
 
           <button
             type="button"
             onClick={handlePrintPDF}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center space-x-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-xs shadow-md shadow-brand-500/25 hover:from-brand-700 hover:to-indigo-700 transition-all"
+            className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
             <span>Xuất PDF</span>
           </button>
         </div>
       </div>
 
       {/* Provenance Metadata Badge */}
-      <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="bg-slate-50 rounded-md p-3.5 border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center space-x-2">
-          <BookOpen className="w-4 h-4 text-brand-600 shrink-0" />
+          <BookOpen className="w-4 h-4 text-blue-600 shrink-0" />
           <span>
             <strong>Nguồn gốc tài liệu:</strong> {roadmap.roadmap_data.source_title} ({roadmap.roadmap_data.source_page || 'Chương trình khung'})
           </span>
@@ -221,7 +290,7 @@ export const RoadmapDetailPage: React.FC = () => {
           href={roadmap.roadmap_data.source_url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center space-x-1 text-brand-600 font-bold hover:underline"
+          className="inline-flex items-center space-x-1 text-blue-600 font-semibold hover:underline"
         >
           <span>Xem tài liệu gốc</span>
           <ExternalLink className="w-3 h-3" />
@@ -229,18 +298,18 @@ export const RoadmapDetailPage: React.FC = () => {
       </div>
 
       {/* Progress Checklist Tracker */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
-            Tiến độ Hoàn thành Nhiệm vụ Tự học
-          </h3>
-          <span className="text-xs font-black text-brand-600">
+      <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-2">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-semibold text-slate-800 uppercase tracking-wider">
+            Tiến độ hoàn thành nhiệm vụ
+          </span>
+          <span className="font-bold text-slate-900">
             {completedCount} / {totalActions} việc ({progressPct}%)
           </span>
         </div>
-        <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-emerald-500 to-brand-500 rounded-full transition-all duration-300"
+            className="h-full bg-blue-600 rounded-full transition-all duration-300"
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -248,30 +317,28 @@ export const RoadmapDetailPage: React.FC = () => {
 
       {/* Guidance RAG 4-Week Schedule */}
       {schedule && (
-        <div className="bg-white rounded-3xl p-6 border border-indigo-100 shadow-sm space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-indigo-50 text-brand-700 text-xs font-bold mb-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-brand-600" />
-                <span>Kế hoạch Học tập 4 Tuần Cá nhân hóa (Guidance RAG)</span>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                {schedule.personalization_summary}
-              </p>
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-3">
+          <div>
+            <div className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-xs font-semibold mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <span>Kế hoạch Chuẩn bị 4 Tuần (Guidance RAG)</span>
             </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              {schedule.personalization_summary}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
             {schedule.schedule.map(task => (
-              <div key={task.week_number} className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100/80 space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-brand-800 font-extrabold">Tuần {task.week_number}: {task.focus_skill}</span>
-                  <span className="text-[11px] text-slate-500 font-semibold">{task.estimated_hours}h / tuần</span>
+              <div key={task.week_number} className="p-3.5 rounded-md bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-900">
+                  <span>Tuần {task.week_number}: {task.focus_skill}</span>
+                  <span className="text-[11px] text-slate-500 font-normal">{task.estimated_hours}h / tuần</span>
                 </div>
-                <ul className="space-y-1.5 text-xs text-slate-700">
+                <ul className="space-y-1 text-xs text-slate-600">
                   {task.tasks.map((t, idx) => (
                     <li key={idx} className="flex items-start space-x-2">
-                      <span className="text-brand-500 font-black shrink-0">•</span>
+                      <span className="text-slate-400 font-bold shrink-0">•</span>
                       <span className="leading-snug">{t}</span>
                     </li>
                   ))}
@@ -283,47 +350,47 @@ export const RoadmapDetailPage: React.FC = () => {
       )}
 
       {/* Step-by-Step Curriculum Milestones */}
-      <div className="space-y-6">
-        <h2 className="text-base font-extrabold text-slate-800">
-          Các Cột Mốc Đào Tạo Chi Tiết
+      <div className="space-y-4">
+        <h2 className="text-base font-bold text-slate-900">
+          Các cột mốc học tập chi tiết
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {milestones.map(m => (
-            <div key={m.step} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+            <div key={m.step} className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                    Mốc {m.step}
+                  <div className="w-7 h-7 rounded-md bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                    {m.step}
                   </div>
                   <div>
-                    <h3 className="text-sm font-extrabold text-slate-900">{m.title}</h3>
-                    <span className="text-[11px] text-slate-400 font-medium">Thời lượng dự kiến: {m.duration_weeks} tuần</span>
+                    <h3 className="text-sm font-bold text-slate-900">{m.title}</h3>
+                    <span className="text-[11px] text-slate-500">Thời lượng dự kiến: {m.duration_weeks} tuần</span>
                   </div>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-600 leading-relaxed font-normal">
+              <p className="text-xs text-slate-600 leading-relaxed">
                 {m.description}
               </p>
 
-              {/* Learning Objectives */}
+              {/* Objectives */}
               <div className="space-y-1">
-                <span className="text-[11px] font-bold text-slate-700 uppercase">Mục tiêu cần đạt:</span>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600">
+                <span className="text-[11px] font-semibold text-slate-700">Mục tiêu cần đạt:</span>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-600">
                   {m.learning_objectives.map((obj, idx) => (
-                    <li key={idx} className="flex items-center space-x-2 bg-slate-50 p-2 rounded-xl">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <li key={idx} className="flex items-center space-x-1.5 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span className="truncate">{obj}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Action items with interactive checkboxes */}
+              {/* Actions */}
               <div className="space-y-1.5 pt-1">
-                <span className="text-[11px] font-bold text-slate-700 uppercase">Hành động thực hành & Đánh giá:</span>
-                <div className="space-y-2">
+                <span className="text-[11px] font-semibold text-slate-700">Hành động cần làm:</span>
+                <div className="space-y-1.5">
                   {m.actions.map((act, idx) => {
                     const actionKey = `m_${m.step}_act_${idx}`;
                     const isDone = !!completedActions[actionKey];
@@ -332,19 +399,18 @@ export const RoadmapDetailPage: React.FC = () => {
                       <div
                         key={idx}
                         onClick={() => toggleAction(actionKey)}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between text-xs ${
-                          isDone ? 'bg-emerald-50/50 border-emerald-200 text-emerald-900 font-semibold' : 'bg-slate-50/70 border-slate-100 text-slate-700 hover:bg-slate-100'
+                        className={`p-2.5 rounded-md border transition-colors cursor-pointer flex items-center justify-between text-xs ${
+                          isDone ? 'bg-emerald-50/60 border-emerald-200 text-emerald-900' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                         }`}
                       >
                         <div className="flex items-center space-x-2.5">
-                          <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                          <div className={`w-4 h-4 rounded flex items-center justify-center border ${
                             isDone ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-300'
                           }`}>
-                            {isDone && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                            {isDone && <Check className="w-3 h-3 stroke-[3]" />}
                           </div>
-                          <span className={isDone ? 'line-through text-slate-500' : ''}>{act}</span>
+                          <span className={isDone ? 'line-through text-slate-500' : 'font-medium'}>{act}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-bold">+15 XP</span>
                       </div>
                     );
                   })}
@@ -355,24 +421,83 @@ export const RoadmapDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ============================================================== */}
-      {/* MODAL: CHỌN / ĐỔI SANG NGÀNH KHÁC TRONG LỘ TRÌNH HỌC TẬP      */}
-      {/* ============================================================== */}
+      {/* AI Assistant Help Banner */}
+      <div className="bg-linear-to-r from-blue-900 via-indigo-900 to-purple-950 rounded-lg p-5 text-white border border-indigo-700/50 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center space-x-2">
+            <span className="p-1.5 rounded-lg bg-white/10 text-cyan-300">
+              <BrainCircuit className="w-5 h-5" />
+            </span>
+            <h3 className="text-sm font-bold">Bạn cần giải đáp thêm về lộ trình này?</h3>
+          </div>
+          <p className="text-xs text-blue-100/80 max-w-xl">
+            Cố vấn AI CareerGuide sẵn sàng giải đáp thắc mắc về các môn học nền tảng, bài tập thực hành hoặc phân tích mức độ tương thích với điểm số của bạn theo Luật 91/2025/QH15.
+          </p>
+        </div>
+
+        <div className="flex items-center space-x-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsAIModalOpen(true)}
+            className="px-3.5 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white font-medium text-xs border border-white/20 transition-colors flex items-center space-x-1.5 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>Phân tích 4 trụ cột</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(
+                new CustomEvent('open_ai_counselor_chat', {
+                  detail: { majorCode: code, majorName: roadmap.title },
+                })
+              );
+            }}
+            className="px-4 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Chat với Cố vấn AI</span>
+          </button>
+        </div>
+      </div>
+
+      {/* AI Explanation Modal */}
+      <AIExplanationModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        majorCode={code}
+        majorName={roadmap.title.replace('Lộ trình học tập chuẩn hóa: ', '')}
+        riasecScores={riasecScores}
+        grades={grades}
+        diagnosticMasteredSkills={diagnosticSkills}
+        userId={userId}
+        onOpenChatWithMajor={(mCode, mName) => {
+          setIsAIModalOpen(false);
+          window.dispatchEvent(
+            new CustomEvent('open_ai_counselor_chat', {
+              detail: { majorCode: mCode, majorName: mName },
+            })
+          );
+        }}
+      />
+
+      {/* Switch Major Modal */}
       {isSwitchMajorModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50/50 to-purple-50/30">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-bold shadow-md shadow-brand-500/20">
-                  <Compass className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-lg shadow-modal border border-slate-200 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-md bg-blue-600 text-white flex items-center justify-center font-bold">
+                  <Compass className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900">
                     Đổi Sang Lộ Trình Ngành Khác
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Chọn bất kỳ ngành nào trong 108 ngành cấp IV của Bộ GD&ĐT để xem và học theo lộ trình
+                    Chọn ngành trong 108 ngành cấp IV của Bộ GD&ĐT
                   </p>
                 </div>
               </div>
@@ -380,32 +505,31 @@ export const RoadmapDetailPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsSwitchMajorModalOpen(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Search & Filter Inputs */}
-            <div className="p-4 border-b border-slate-100 space-y-3 bg-slate-50/50">
+            {/* Filter */}
+            <div className="p-3 border-b border-slate-200 space-y-2 bg-white">
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Nhập tên ngành, mã ngành (ví dụ: 7480109) hoặc tổ hợp môn..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white font-medium"
+                  placeholder="Nhập tên ngành, mã ngành hoặc khối thi..."
+                  className="w-full pl-9 pr-3 py-1.5 rounded-md border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                 />
               </div>
 
-              {/* Category selector */}
               <div className="flex items-center space-x-2">
-                <span className="text-xs font-bold text-slate-600 shrink-0">Lĩnh vực:</span>
+                <span className="text-xs text-slate-600 shrink-0 font-medium">Lĩnh vực:</span>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-semibold"
+                  className="w-full px-2.5 py-1 rounded-md border border-slate-300 text-xs bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 >
                   {categories.map((c) => (
                     <option key={c} value={c}>
@@ -416,11 +540,11 @@ export const RoadmapDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Majors List Results */}
-            <div className="p-4 overflow-y-auto flex-1 divide-y divide-slate-100 space-y-1">
+            {/* Majors List */}
+            <div className="p-3 overflow-y-auto flex-1 divide-y divide-slate-100">
               {filteredMajors.length === 0 ? (
-                <div className="py-12 text-center text-slate-400 text-xs">
-                  Không tìm thấy ngành đào tạo phù hợp với từ khóa "{searchTerm}".
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  Không tìm thấy ngành phù hợp với từ khóa "{searchTerm}".
                 </div>
               ) : (
                 filteredMajors.map((m) => {
@@ -430,38 +554,38 @@ export const RoadmapDetailPage: React.FC = () => {
                     <div
                       key={m.major_code}
                       onClick={() => handleSwitchToMajor(m)}
-                      className={`p-3.5 rounded-2xl transition-colors cursor-pointer flex items-center justify-between group ${
-                        isCurrentMajor ? 'bg-brand-50/70 border border-brand-200' : 'hover:bg-indigo-50/50'
+                      className={`p-2.5 rounded-md transition-colors cursor-pointer flex items-center justify-between ${
+                        isCurrentMajor ? 'bg-blue-50/70 border border-blue-200' : 'hover:bg-slate-50'
                       }`}
                     >
                       <div className="space-y-0.5 pr-4">
                         <div className="flex items-center space-x-2">
-                          <span className="font-mono text-[10px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200">
+                          <span className="font-mono text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
                             {m.major_code}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-medium">
+                          <span className="text-[11px] text-slate-500 font-medium">
                             {m.category}
                           </span>
                           {isCurrentMajor && (
-                            <span className="px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 text-[10px] font-bold">
+                            <span className="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[10px] font-semibold">
                               Đang xem
                             </span>
                           )}
                         </div>
-                        <h4 className="text-xs font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors">
+                        <h4 className="text-xs font-bold text-slate-900">
                           {m.name}
                         </h4>
-                        <div className="text-[10px] text-slate-500">
-                          Tổ hợp môn: {m.blocks.slice(0, 3).join(', ')}
+                        <div className="text-[11px] text-slate-500">
+                          Khối xét tuyển: {m.blocks.slice(0, 3).join(', ')}
                         </div>
                       </div>
 
                       <button
                         type="button"
-                        className={`px-3.5 py-1.5 rounded-xl font-bold text-xs shrink-0 shadow-xs flex items-center space-x-1 ${
+                        className={`px-3 py-1 rounded-md text-xs font-semibold shrink-0 shadow-xs flex items-center space-x-1 ${
                           isCurrentMajor
-                            ? 'bg-slate-200 text-slate-700 cursor-default'
-                            : 'bg-brand-600 hover:bg-brand-700 text-white'
+                            ? 'bg-slate-200 text-slate-600 cursor-default'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
                         }`}
                       >
                         <span>{isCurrentMajor ? 'Đang học' : 'Chuyển ngành'}</span>
@@ -473,13 +597,13 @@ export const RoadmapDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+            {/* Footer */}
+            <div className="p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
               <span>Hiển thị {filteredMajors.length} / {allMajors.length} ngành</span>
               <button
                 type="button"
                 onClick={() => setIsSwitchMajorModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-200 font-bold transition-colors"
+                className="px-3 py-1.5 rounded-md text-slate-700 hover:bg-slate-200 font-medium transition-colors"
               >
                 Đóng
               </button>

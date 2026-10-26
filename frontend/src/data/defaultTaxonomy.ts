@@ -8,8 +8,12 @@
  * (Initial Fallback) khi giao diện chưa kịp tải dữ liệu từ CSDL backend.
  */
 import { MajorItem } from '../types';
+import moetSeedData from './moet_taxonomy_tt09.json';
 
 export type { MajorItem };
+
+// Toàn bộ 108 ngành đào tạo đại học cấp IV theo Thông tư 09/2022/TT-BGDĐT
+export const MOET_108_MAJORS: MajorItem[] = moetSeedData as unknown as MajorItem[];
 
 // 6 ngành nòng cốt ban đầu (Initial Fallback khi CSDL đang khởi tạo)
 export const INITIAL_SIX_MAJORS: MajorItem[] = [
@@ -128,15 +132,15 @@ export const getStoredPublishedMajors = (): MajorItem[] => {
     const raw = localStorage.getItem('careerguide_published_majors');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed) && parsed.length >= 100) {
         return parsed;
       }
     }
   } catch (err) {
     // ignore
   }
-  return INITIAL_SIX_MAJORS;
+  return MOET_108_MAJORS;
 };
 
-// Khởi tạo danh mục MOET từ Local Storage (được đồng bộ từ CSDL backend)
+// Khởi tạo danh mục MOET chính thức từ Thông tư 09/2022/TT-BGDĐT
 export const OFFICIAL_MOET_MAJORS: MajorItem[] = getStoredPublishedMajors();

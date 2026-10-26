@@ -38,6 +38,10 @@ from app.services.llamaindex_rag_orchestrator.guidance_rag import (
     sanitize_pii,
     personalize_guidance,
     semantic_search_chunks,
+    explain_recommendation_with_ai,
+    chat_with_career_counselor,
+    get_llm_status,
+    test_llm_connection,
 )
 
 

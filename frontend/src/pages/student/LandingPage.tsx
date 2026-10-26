@@ -5,125 +5,160 @@ import {
   Sparkles,
   BrainCircuit,
   FileSpreadsheet,
-  MapPin,
-  ShieldCheck,
   ArrowRight,
-  TrendingUp,
   Award,
-  Layers,
-  Flame,
+  Check,
+  GraduationCap,
   CheckCircle2,
+  BookOpen,
 } from 'lucide-react';
-import { useAssessment } from '../../context/AssessmentContext';
 
 export const LandingPage: React.FC = () => {
-  const { xpPoints, streakDays } = useAssessment();
-
   const pillars = [
     {
-      title: 'Trụ cột 1: Sở thích Nghề nghiệp (45%)',
+      step: '01',
+      title: 'Sở thích Nghề nghiệp',
       weight: '45% Trọng số',
-      desc: 'Mô hình 6 chiều Holland (RIASEC) đo lường độ tương thích tính cách qua thuật toán Cosine Similarity.',
+      desc: 'Mô hình 6 chiều Holland (RIASEC) đo lường độ tương thích tính cách qua thuật toán Cosine Similarity chuẩn hóa.',
       icon: BrainCircuit,
-      badgeColor: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-      iconColor: 'text-indigo-600',
+      badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
     },
     {
-      title: 'Trụ cột 2: Năng lực Học thuật (35%)',
+      step: '02',
+      title: 'Năng lực Học thuật',
       weight: '35% Trọng số',
-      desc: 'Chuẩn hóa điểm học bạ qua phân phối Z-score và hàm tích lũy xác suất chuẩn (Normal CDF) theo tổ hợp môn quốc gia (A00, A01, D01...).',
+      desc: 'Chuẩn hóa điểm học bạ THPT qua phân phối Z-score và hàm tích lũy xác suất chuẩn (Normal CDF) theo các khối tuyển sinh (A00, A01, D01...).',
       icon: FileSpreadsheet,
-      badgeColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-      iconColor: 'text-emerald-600',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     },
     {
-      title: 'Trụ cột 3: Thiên hướng Nhận thức (20%)',
+      step: '03',
+      title: 'Thiên hướng Nhận thức',
       weight: '20% Trọng số',
-      desc: 'Đối chiếu phương pháp học tập tối ưu (thực hành vs. lý thuyết, độc lập vs. nhóm) bằng mô hình Rule-based.',
+      desc: 'Phân tích phương pháp tiếp nhận thông tin (thực hành vs. lý thuyết, độc lập vs. cộng tác) theo lý thuyết đa trí tuệ Gardner.',
       icon: Sparkles,
-      badgeColor: 'bg-amber-100 text-amber-700 border-amber-200',
-      iconColor: 'text-amber-600',
+      badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
+    },
+  ];
+
+  const workflowSteps = [
+    {
+      step: '1',
+      title: 'Khảo sát Sở thích & Nhận thức',
+      desc: '30 câu hỏi sở thích nghề nghiệp Holland RIASEC (thang Likert 1-5) và 8 câu trắc nghiệm phong cách tiếp thu tri thức.',
+      tag: '45% + 20%',
+    },
+    {
+      step: '2',
+      title: 'Nhập Điểm Học bạ THPT',
+      desc: 'Điền điểm trung bình các môn học văn hóa để hệ thống chuẩn hóa Z-score theo phân phối điểm chuẩn quốc gia.',
+      tag: '35%',
+    },
+    {
+      step: '3',
+      title: 'Chẩn đoán Năng lực Đầu vào (FR03)',
+      desc: 'Kiểm tra nhanh 10 phút kiến thức logic hoặc chuyên ngành để tự động khấu trừ lỗ hổng kỹ năng trong lộ trình học.',
+      tag: 'Bổ trợ kỹ năng',
+    },
+    {
+      step: '4',
+      title: 'Nhận Đề xuất & Lộ trình XAI',
+      desc: 'Xem xếp hạng 108 ngành cấp IV với giải trình minh bạch, biểu đồ Radar đối sánh và lộ trình phát triển kỹ năng từng kỳ.',
+      tag: 'XAI Minh bạch',
+    },
+  ];
+
+  const standards = [
+    {
+      title: 'Thông tư 09/2022/TT-BGDĐT',
+      desc: 'Bám sát 100% danh mục giáo dục đào tạo cấp IV quốc gia với 108 ngành đại học chính quy.',
+    },
+    {
+      title: 'Toán học Tất định 100%',
+      desc: 'Thuật toán đối sánh vector Cosine và hàm Normal CDF có thể kiểm toán, không phụ thuộc vào phán đoán ngẫu nhiên.',
+    },
+    {
+      title: 'Bảo mật theo Luật 91/2025/QH15',
+      desc: 'Dữ liệu học bạ và bài kiểm tra được cô lập theo tài khoản riêng biệt, khử khuẩn định danh PII trước khi xử lý.',
+    },
+    {
+      title: 'Không thiên lệch thương mại',
+      desc: 'Khuyến nghị hoàn toàn dựa trên năng lực và sở thích, tuyệt đối không đưa học phí hay địa phương vào công thức tính điểm.',
     },
   ];
 
   return (
-    <div className="space-y-20 pb-16">
+    <div className="bg-slate-50 min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28">
-        {/* Background decorative glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-brand-300/30 to-purple-300/20 blur-3xl -z-10 rounded-full pointer-events-none" />
+      <section className="border-b border-slate-200 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="max-w-3xl space-y-6">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-xs font-semibold text-blue-700">
+              <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+              <span>Hệ thống Định hướng Giáo dục Đại học Chuẩn Quốc gia</span>
+            </div>
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-          {/* Gamified Banner */}
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-50 to-indigo-50 border border-amber-200/80 shadow-sm animate-bounce-slow">
-            <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
-            <span className="text-xs font-bold text-slate-700">
-              Khám phá năng lực – Nhận ngay <strong className="text-brand-600">+100 XP</strong> và bản đồ ngành học tương thích
-            </span>
-          </div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 tracking-tight leading-tight">
+              Định hướng ngành học đại học dựa trên cơ sở khoa học và dữ liệu thực tế
+            </h1>
 
-          {/* Main Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-            Định hướng Ngành học Chuẩn xác với{' '}
-            <span className="bg-gradient-to-r from-brand-600 via-indigo-600 to-gamify-violet bg-clip-text text-transparent">
-              Trí tuệ Nhân tạo Giải thích được (XAI)
-            </span>
-          </h1>
+            <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
+              Giải pháp tư vấn chọn ngành kết hợp 3 trụ cột khoa học: Khảo sát sở thích Holland RIASEC,
+              phân tích học bạ THPT chuẩn hóa Z-Score, và đối chiếu với danh mục đào tạo cấp IV Thông tư 09/2022/TT-BGDĐT.
+            </p>
 
-          {/* Subtitle */}
-          <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-600 leading-relaxed font-normal">
-            Không còn băn khoăn chọn sai ngành. Hệ thống tổng hợp 3 trụ cột (Sở thích Holland, Điểm học thuật Z-Score và Thiên hướng nhận thức) bám sát danh mục đào tạo cấp IV Thông tư 09/2022/TT-BGDĐT.
-          </p>
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <Link
+                to="/guidance"
+                className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors"
+              >
+                <span>Bắt đầu khảo sát năng lực</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
 
-          {/* CTA Buttons */}
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/guidance"
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 px-8 py-3.5 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-700 hover:to-indigo-800 shadow-xl shadow-brand-500/30 hover:scale-[1.02] transition-all"
-            >
-              <BrainCircuit className="w-5 h-5" />
-              <span>Bắt Đầu Định Hướng Nghề Nghiệp</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+              <Link
+                to="/taxonomy"
+                className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-lg text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition-colors"
+              >
+                <Compass className="w-4 h-4 text-slate-500" />
+                <span>Tra cứu 108 ngành cấp IV</span>
+              </Link>
+            </div>
 
-            <Link
-              to="/taxonomy"
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 rounded-2xl text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-sm hover:shadow transition-all"
-            >
-              <Compass className="w-5 h-5 text-brand-600" />
-              <span>Tra cứu 80+ Ngành cấp IV</span>
-            </Link>
-          </div>
-
-          {/* Trust badges */}
-          <div className="pt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 font-medium">
-            <span className="flex items-center space-x-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span>Thuần toán học 100% tất định</span>
-            </span>
-            <span className="flex items-center space-x-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span>Không thiên lệch học phí & địa lý</span>
-            </span>
-            <span className="flex items-center space-x-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span>Bảo vệ quyền riêng tư Luật số 91</span>
-            </span>
+            {/* Metrics */}
+            <div className="pt-8 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-6 text-left">
+              <div>
+                <p className="text-2xl font-bold text-slate-900">108</p>
+                <p className="text-xs text-slate-500 mt-0.5">Mã ngành Cấp IV Bộ GD&ĐT</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">3 Trụ cột</p>
+                <p className="text-xs text-slate-500 mt-0.5">RIASEC + Z-Score + Nhận thức</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">FR03</p>
+                <p className="text-xs text-slate-500 mt-0.5">Chẩn đoán kỹ năng đầu vào</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">Luật 91</p>
+                <p className="text-xs text-slate-500 mt-0.5">Bảo vệ dữ liệu cá nhân</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* 3 Pillars Section */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <div className="text-center space-y-2">
-          <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-brand-700 border border-indigo-100">
-            Lõi Thuật toán XAI Độc quyền
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800">
-            Mô hình Tương thích 3 Trụ cột Khoa học
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="space-y-3 mb-10">
+          <div className="inline-flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-blue-700">
+            <span>Phương pháp luận</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            Khung đánh giá tương thích 3 trụ cột khoa học
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
-            Quyết định tương lai cần cơ sở khoa học vững chắc thay vì những lời khuyên cảm tính hay may rủi.
+          <p className="text-sm text-slate-600 max-w-2xl">
+            Thay vì dựa trên linh cảm hoặc các mô hình tạo sinh không kiểm soát, hệ thống sử dụng thuật toán tính điểm tất định với trọng số rõ ràng cho từng phương diện.
           </p>
         </div>
 
@@ -133,76 +168,119 @@ export const LandingPage: React.FC = () => {
             return (
               <div
                 key={idx}
-                className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-xl hover:shadow-indigo-50 border border-slate-100 space-y-4 transition-all duration-300 relative group"
+                className="bg-white rounded-lg p-6 border border-slate-200 shadow-sm flex flex-col justify-between"
               >
-                <div className="flex items-center justify-between">
-                  <div className={`w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center ${p.iconColor} group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-6 h-6" />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-slate-400">
+                      TRỤ CỘT {p.step}
+                    </span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${p.badgeColor}`}>
+                      {p.weight}
+                    </span>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${p.badgeColor}`}>
-                    {p.weight}
-                  </span>
+
+                  <div className="w-10 h-10 rounded-md bg-slate-100 flex items-center justify-center text-slate-700">
+                    <Icon className="w-5 h-5 text-blue-600" />
+                  </div>
+
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {p.title}
+                  </h3>
+
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    {p.desc}
+                  </p>
                 </div>
-                <h3 className="text-base font-extrabold text-slate-800 group-hover:text-brand-600 transition-colors">
-                  {p.title}
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                  {p.desc}
-                </p>
+
+                <div className="pt-6 mt-6 border-t border-slate-100 flex items-center text-xs font-semibold text-blue-600">
+                  <Link to="/guidance" className="inline-flex items-center hover:underline">
+                    <span>Thực hiện đánh giá</span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Link>
+                </div>
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* Gamification Progress Preview */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-900 rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-2xl">
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4">
-              <span className="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-300/30 text-xs font-bold inline-flex items-center space-x-1.5">
-                <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                <span>Gamification Portal</span>
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                Vừa Định hướng Ngành vừa Tích lũy Điểm Thưởng
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Từng câu trả lời trắc nghiệm, từng môn học bạ nhập vào sẽ mở khóa các huy hiệu năng lực nghề nghiệp, giúp bạn tự tin chọn ngành đúng chuẩn.
-              </p>
-              <div className="pt-2 flex items-center space-x-4">
-                <div className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-                  <p className="text-[10px] text-slate-300 font-semibold uppercase">Điểm XP hiện tại</p>
-                  <p className="text-xl font-extrabold text-amber-300">{xpPoints} XP</p>
-                </div>
-                <div className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-                  <p className="text-[10px] text-slate-300 font-semibold uppercase">Chuỗi liên tục</p>
-                  <p className="text-xl font-extrabold text-emerald-400">{streakDays} Ngày</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 space-y-4">
-              <h4 className="text-sm font-bold text-white flex items-center space-x-2">
-                <Award className="w-4 h-4 text-amber-400" />
-                <span>Huy hiệu đang mở khóa</span>
-              </h4>
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 text-xs">
-                  <span className="font-semibold text-slate-200">🔍 Nhà Thám Hiểm Holland RIASEC</span>
-                  <span className="text-[11px] font-bold text-amber-300">+100 XP</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 text-xs">
-                  <span className="font-semibold text-slate-200">📊 Chuyên Gia Z-Score Học Thuật</span>
-                  <span className="text-[11px] font-bold text-emerald-300">+80 XP</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 text-xs">
-                  <span className="font-semibold text-slate-200">🎯 Bậc Thầy Lộ Trình Tự Học</span>
-                  <span className="text-[11px] font-bold text-indigo-300">+120 XP</span>
-                </div>
-              </div>
-            </div>
+      {/* 4-Step Process */}
+      <section className="bg-slate-100 border-y border-slate-200 py-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
+              Quy trình 4 bước tiếp cận minh bạch
+            </h2>
+            <p className="text-sm text-slate-600 max-w-xl">
+              Học sinh và phụ huynh có thể chủ động theo dõi từng giai đoạn đánh giá với tiến trình trực quan và dữ liệu lưu giữ an toàn.
+            </p>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {workflowSteps.map((ws) => (
+              <div key={ws.step} className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-3 flex flex-col justify-between">
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+                      {ws.step}
+                    </div>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                      {ws.tag}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">{ws.title}</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">{ws.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Standards & Transparency Grid */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="space-y-3 mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            Cam kết chất lượng và tính minh bạch
+          </h2>
+          <p className="text-sm text-slate-600 max-w-xl">
+            Các tiêu chuẩn kỹ thuật và pháp lý được tích hợp trực tiếp vào kiến trúc hệ thống.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {standards.map((s, idx) => (
+            <div key={idx} className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex items-start space-x-4">
+              <div className="w-8 h-8 rounded-md bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0 mt-0.5">
+                <Check className="w-4 h-4" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">{s.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA Box */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="bg-slate-900 text-white rounded-lg p-8 sm:p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <h2 className="text-2xl font-bold tracking-tight">
+              Sẵn sàng xây dựng lộ trình hướng nghiệp cho bản thân?
+            </h2>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              Bắt đầu bài khảo sát ngay hôm nay. Mọi dữ liệu cá nhân của bạn đều được bảo mật an toàn theo tiêu chuẩn Luật số 91/2025/QH15.
+            </p>
+          </div>
+          <Link
+            to="/guidance"
+            className="px-6 py-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-colors shrink-0"
+          >
+            Thực hiện bài test ngay
+          </Link>
         </div>
       </section>
     </div>

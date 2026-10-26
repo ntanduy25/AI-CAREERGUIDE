@@ -7,6 +7,7 @@ import { AssessmentProvider } from './context/AssessmentContext';
 // Student Layout Components
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
+import { AICounselorChatDrawer } from './components/ai/AICounselorChatDrawer';
 
 // Student & Parent Portal Pages
 import { LandingPage } from './pages/student/LandingPage';
@@ -52,6 +53,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
  * Student Layout: Navbar with XP/Streak, EdTech Student views, and Footer
  */
 const StudentLayout: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800">
       <Navbar />
@@ -59,6 +61,7 @@ const StudentLayout: React.FC = () => {
         <Outlet />
       </main>
       <Footer />
+      {isAuthenticated && <AICounselorChatDrawer userId={user?.id} />}
     </div>
   );
 };
@@ -89,6 +92,7 @@ export const AppContent: React.FC = () => {
         <Route path="/assessment" element={<Navigate to="/guidance?tab=riasec" replace />} />
         <Route path="/academic-transcript" element={<Navigate to="/guidance?tab=transcript" replace />} />
         <Route path="/recommendations" element={<Navigate to="/guidance?tab=recommendation" replace />} />
+        <Route path="/diagnostic" element={<Navigate to="/guidance?tab=diagnostic" replace />} />
 
         {/* Student Roadmaps Management (Saved history & New selections) */}
         <Route

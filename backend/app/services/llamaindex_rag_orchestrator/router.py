@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import require_admin, get_current_user
+from app.core.dependencies import require_admin, get_current_user, get_optional_current_user
 from app.models.identity import User
 from app.models.staging import StagingStatus, StagingStreamType
 from app.schemas.staging import (
@@ -20,6 +20,13 @@ from app.schemas.rag import (
     GuidancePersonalizationResponse,
     SemanticSearchRequest,
     ChunkSearchResult,
+    AIExplanationRequest,
+    AIExplanationResponse,
+    AIChatRequest,
+    AIChatResponse,
+    LLMConnectionTestRequest,
+    LLMConnectionTestResponse,
+    LLMStatusResponse,
 )
 from app.services.llamaindex_rag_orchestrator import service
 
@@ -170,3 +177,52 @@ async def personalize_study_guidance(
     Includes strict 8s timeout with automatic graceful Static Fallback Template.
     """
     return await service.personalize_guidance(db, payload)
+
+@router.post("/explain-recommendation", response_model=AIExplanationResponse)
+async def explain_major_recommendation(
+    payload: AIExplanationRequest,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Explains in-depth why a specific major was recommended using AI (FR06).
+    PII SANITIZATION: Strictly uses anonymized student test metrics (RIASEC, grades, diagnostic skills).
+    Excludes all student personal information (name, address, school, phone, email) to comply with Law 91/2025/QH15.
+    """
+    user_id = current_user.id if current_user else payload.user_id
+    return await service.explain_recommendation_with_ai(db, payload, user_id)
+
+
+@router.post("/chat", response_model=AIChatResponse)
+async def chat_with_counselor(
+    payload: AIChatRequest,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    AI Career Guidance Counselor chat endpoint.
+    Answers student questions on majors, academic preparation, diagnostic checks, and roadmaps.
+    PII SANITIZATION: All messages pass through sanitize_pii before LLM invocation.
+    Guarantees pure guidance scope: no tuition or geographic bias.
+    """
+    user_id = current_user.id if current_user else payload.user_id
+    return await service.chat_with_career_counselor(db, payload, user_id)
+
+
+@router.get("/llm-status", response_model=LLMStatusResponse)
+async def get_system_llm_status():
+    """Returns the current LLM model, base URL, and masked API key status."""
+    return service.get_llm_status()
+
+
+@router.post("/test-llm-connection", response_model=LLMConnectionTestResponse)
+async def test_llm_api_connection(
+    payload: Optional[LLMConnectionTestRequest] = None,
+):
+    """
+    Tests live connection to the configured LLM API (DeepSeek / OpenAI).
+    Returns success status, round-trip latency (ms), HTTP code, and Vietnamese diagnostic messages.
+    """
+    request_data = payload or LLMConnectionTestRequest()
+    return await service.test_llm_connection(request_data)
+

@@ -519,3 +519,109 @@ class TestSecurityAndGuardrails:
         # Must execute within 1.0s SLA (NFR01)
         assert elapsed < 1.0
         assert result.major_code == "7480201"
+
+# =========================================================================
+# 7. AI EXPLANATION & AI COUNSELOR CHAT TESTS (FR06 & LAW 91/2025 COMPLIANCE)
+# =========================================================================
+
+class TestAIExplanationAndChatCounselor:
+    @pytest.mark.anyio
+    async def test_ai_explanation_strictly_anonymized_and_includes_diagnostics(self):
+        from app.schemas.rag import AIExplanationRequest
+        from app.services.llamaindex_rag_orchestrator.guidance_rag import explain_recommendation_with_ai
+
+        db = AsyncMock()
+        mock_major = MagicMock()
+        mock_major.name = "Công nghệ thông tin"
+        mock_major.category = "Máy tính và công nghệ thông tin"
+        mock_major.id = uuid.uuid4()
+        
+        mock_res = MagicMock()
+        mock_res.scalar_one_or_none.return_value = mock_major
+        mock_res.scalars.return_value.all.return_value = []
+        db.execute.return_value = mock_res
+
+        req = AIExplanationRequest(
+            major_code="7480201",
+            riasec_scores={"R": 0.85, "I": 0.90, "A": 0.40, "S": 0.30, "E": 0.50, "C": 0.70},
+            grades_by_subject={"math": 9.2, "physics": 9.0, "chemistry": 8.0, "english": 8.5},
+            diagnostic_skills_mastered=["SKILL_PRE_LOGIC_DISCRETE", "SKILL_TAR_PROG_PYTHON"]
+        )
+
+        resp = await explain_recommendation_with_ai(db, req)
+        assert resp.major_code == "7480201"
+        assert resp.major_name == "Công nghệ thông tin"
+        assert "SKILL_PRE_LOGIC_DISCRETE" in resp.diagnostic_readiness or "2 kỹ năng" in resp.diagnostic_readiness
+        assert len(resp.strengths) >= 2
+        assert len(resp.recommended_focus_areas) >= 2
+
+        # PII Verification: No personal identifiers in output
+        assert "@" not in resp.detailed_explanation
+        assert "09" not in resp.detailed_explanation
+
+    @pytest.mark.anyio
+    async def test_ai_counselor_chat_sanitizes_pii_and_responds(self):
+        from app.schemas.rag import AIChatRequest
+        from app.services.llamaindex_rag_orchestrator.guidance_rag import chat_with_career_counselor
+
+        db = AsyncMock()
+        mock_res = MagicMock()
+        mock_res.scalar_one_or_none.return_value = None
+        mock_res.scalars.return_value.all.return_value = []
+        db.execute.return_value = mock_res
+
+        # Student sends message containing accidental PII
+        req = AIChatRequest(
+            message="Em tên là Nguyễn Tuấn, sđt 0987654321, tại sao em lại phù hợp với ngành Công nghệ thông tin?",
+            major_code="7480201",
+            riasec_scores={"R": 0.8, "I": 0.9, "A": 0.3, "S": 0.4, "E": 0.5, "C": 0.6},
+            grades_by_subject={"math": 9.0, "physics": 8.5},
+            diagnostic_skills_mastered=["SKILL_PRE_LOGIC_DISCRETE"]
+        )
+
+        resp = await chat_with_career_counselor(db, req)
+        assert resp.reply is not None
+        assert len(resp.reply) > 20
+        assert len(resp.suggested_followups) >= 2
+        # Ensure student's personal phone number was not echoed or exposed
+        assert "0987654321" not in resp.reply
+
+    def test_llm_status_reports_model_and_masked_key(self):
+        from app.services.llamaindex_rag_orchestrator.guidance_rag import get_llm_status
+        status_info = get_llm_status()
+        assert status_info.model == "deepseek-4.1-flash-ckey"
+        assert status_info.embedding_model == "text-embedding-3-small"
+        assert isinstance(status_info.is_key_configured, bool)
+
+    @pytest.mark.anyio
+    async def test_llm_connection_test_without_key_reports_clean_failure(self):
+        from app.schemas.rag import LLMConnectionTestRequest
+        from app.services.llamaindex_rag_orchestrator.guidance_rag import test_llm_connection
+        req = LLMConnectionTestRequest(api_key="")
+        result = await test_llm_connection(req)
+        assert result.success is False
+        assert result.status_code == 400
+        assert "Chưa cấu hình API Key" in result.message
+
+    @pytest.mark.anyio
+    async def test_llm_connection_test_with_mocked_success(self):
+        from app.schemas.rag import LLMConnectionTestRequest
+        from app.services.llamaindex_rag_orchestrator.guidance_rag import test_llm_connection
+        with patch("openai.AsyncOpenAI") as mock_openai_cls:
+            mock_client = MagicMock()
+            mock_chat = AsyncMock()
+            mock_choice = MagicMock()
+            mock_choice.message.content = "PONG"
+            mock_response = MagicMock(choices=[mock_choice])
+            mock_chat.completions.create.return_value = mock_response
+            mock_client.chat = mock_chat
+            mock_openai_cls.return_value = mock_client
+
+            req = LLMConnectionTestRequest(api_key="sk-test-valid-key", model="deepseek-4.1-flash-ckey")
+            result = await test_llm_connection(req)
+            assert result.success is True
+            assert result.status_code == 200
+            assert result.model_used == "deepseek-4.1-flash-ckey"
+            assert result.preview_reply == "PONG"
+            assert result.latency_ms >= 0.0
+

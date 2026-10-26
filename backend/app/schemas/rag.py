@@ -71,3 +71,73 @@ class GuidancePersonalizationResponse(BaseModel):
     personalization_summary: str
     schedule: List[PersonalizedScheduleTask]
     is_fallback: bool = False
+
+class AIExplanationRequest(BaseModel):
+    major_code: str
+    user_id: Optional[uuid.UUID] = None
+    riasec_scores: Optional[Dict[str, float]] = None
+    grades_by_subject: Optional[Dict[str, float]] = None
+    diagnostic_skills_mastered: Optional[List[str]] = None
+    cognitive_preferences: Optional[Dict[str, Any]] = None
+
+
+class AIExplanationResponse(BaseModel):
+    major_code: str
+    major_name: str
+    detailed_explanation: str
+    riasec_alignment: str
+    academic_alignment: str
+    diagnostic_readiness: str
+    strengths: List[str]
+    recommended_focus_areas: List[str]
+    is_ai_generated: bool = True
+
+
+class AIChatMessage(BaseModel):
+    role: str = Field(description="'user' or 'assistant'")
+    content: str
+
+
+class AIChatRequest(BaseModel):
+    message: str
+    major_code: Optional[str] = None
+    user_id: Optional[uuid.UUID] = None
+    history: Optional[List[AIChatMessage]] = None
+    riasec_scores: Optional[Dict[str, float]] = None
+    grades_by_subject: Optional[Dict[str, float]] = None
+    diagnostic_skills_mastered: Optional[List[str]] = None
+    cognitive_preferences: Optional[Dict[str, Any]] = None
+
+
+class AIChatResponse(BaseModel):
+    reply: str
+    suggested_followups: List[str] = Field(default_factory=list)
+    context_major_code: Optional[str] = None
+    is_fallback: bool = False
+
+
+class LLMConnectionTestRequest(BaseModel):
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+    model: Optional[str] = None
+
+
+class LLMConnectionTestResponse(BaseModel):
+    success: bool
+    status_code: int
+    latency_ms: float
+    model_used: str
+    base_url: str
+    is_configured: bool
+    message: str
+    preview_reply: Optional[str] = None
+    tested_at: str
+
+
+class LLMStatusResponse(BaseModel):
+    model: str
+    base_url: Optional[str] = None
+    is_key_configured: bool
+    masked_key: Optional[str] = None
+    embedding_model: str
+

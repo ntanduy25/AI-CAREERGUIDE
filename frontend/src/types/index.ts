@@ -348,3 +348,90 @@ export interface MajorItem {
   is_active?: boolean;
 }
 
+// Diagnostic Skill Checks (FR03)
+export interface DiagnosticQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correct_index: number;
+  explanation: string;
+}
+
+export interface DiagnosticQuiz {
+  id: string;
+  skill_code: string;
+  title: string;
+  domain: string;
+  badge_name: string;
+  icon: string;
+  duration_minutes: number;
+  description: string;
+  prerequisite_for: string[];
+  questions: DiagnosticQuestion[];
+}
+
+export interface DiagnosticTestRecord {
+  skill_code: string;
+  quiz_id: string;
+  score: number; // 0.0 - 10.0 scale
+  percentage: number; // 0 - 100%
+  is_passed: boolean; // >= 70%
+  total_questions: number;
+  correct_answers: number;
+  tested_at: string;
+  answers: Record<string, number>;
+}
+
+// AI Explanation & AI Counselor Chat Types (FR06 & Law 91/2025 Compliance)
+export interface AIExplanationResponse {
+  major_code: string;
+  major_name: string;
+  detailed_explanation: string;
+  riasec_alignment: string;
+  academic_alignment: string;
+  diagnostic_readiness: string;
+  strengths: string[];
+  recommended_focus_areas: string[];
+  is_ai_generated: boolean;
+}
+
+export interface AIChatMessage {
+  id?: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  created_at?: string;
+}
+
+export interface AIChatResponse {
+  reply: string;
+  suggested_followups: string[];
+  context_major_code?: string;
+  is_fallback: boolean;
+}
+
+export interface LLMConnectionTestRequest {
+  api_key?: string;
+  base_url?: string;
+  model?: string;
+}
+
+export interface LLMConnectionTestResponse {
+  success: boolean;
+  status_code: number;
+  latency_ms: number;
+  model_used: string;
+  base_url: string;
+  is_configured: boolean;
+  message: string;
+  preview_reply?: string | null;
+  tested_at: string;
+}
+
+export interface LLMStatusResponse {
+  model: string;
+  base_url?: string;
+  is_key_configured: boolean;
+  masked_key?: string | null;
+  embedding_model: string;
+}
+

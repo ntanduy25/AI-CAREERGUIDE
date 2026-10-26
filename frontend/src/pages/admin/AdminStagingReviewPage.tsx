@@ -58,7 +58,7 @@ export const AdminStagingReviewPage: React.FC = () => {
     try {
       const updated = await adminService.updateStagingPayload(selectedRecord.id, editedPayload);
       setSelectedRecord(updated);
-      setActionSuccess('Đã lưu các thay đổi vào bản ghi Staging!');
+      setActionSuccess('Đã lưu các thay đổi vào bản ghi Staging.');
     } catch (err: any) {
       alert(err.message || 'Lỗi khi lưu chỉnh sửa.');
     }
@@ -72,8 +72,8 @@ export const AdminStagingReviewPage: React.FC = () => {
       setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
       setActionSuccess(
         decision === 'APPROVED'
-          ? 'Đã PHÊ DUYỆT thành công! Lộ trình đã xuất bản vào major_roadmaps và nạp vector pgvector.'
-          : 'Đã TỪ CHỐI bản ghi staging.'
+          ? 'Đã phê duyệt thành công. Lộ trình đã được xuất bản vào cơ sở tri thức.'
+          : 'Đã từ chối bản ghi staging.'
       );
     } catch (err: any) {
       alert(err.message || 'Lỗi trong quá trình kiểm duyệt.');
@@ -81,19 +81,19 @@ export const AdminStagingReviewPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-5">
       {/* Top Header */}
-      <div className="bg-slate-900/70 rounded-3xl p-6 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center space-x-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-900/30">
-            <ShieldCheck className="w-6 h-6" />
+      <div className="bg-slate-900 rounded-lg p-5 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-9 h-9 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-white">
-              Giao Diện Kiểm Duyệt Bán Tự Động (Human-in-the-Loop Review UI)
+            <h1 className="text-lg font-bold text-white">
+              Kiểm Duyệt Staging Bán Tự Động (Human-in-the-Loop)
             </h1>
             <p className="text-xs text-slate-400">
-              Kiểm tra tính xác thực nguồn gốc và chỉnh sửa trước khi xuất bản vào Knowledge Base (Bảng 6 & DF05)
+              Kiểm tra tính xác thực nguồn gốc và chỉnh sửa dữ liệu trước khi xuất bản vào cơ sở tri thức.
             </p>
           </div>
         </div>
@@ -103,7 +103,7 @@ export const AdminStagingReviewPage: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-700 text-xs bg-slate-950/60 text-slate-200 font-semibold focus:outline-none focus:border-purple-500"
+            className="px-3 py-1.5 rounded-md border border-slate-700 text-xs bg-slate-900 text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="ALL">Tất cả trạng thái</option>
             <option value="PENDING">Chờ duyệt (PENDING)</option>
@@ -114,7 +114,7 @@ export const AdminStagingReviewPage: React.FC = () => {
           <select
             value={streamFilter}
             onChange={(e) => setStreamFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-700 text-xs bg-slate-950/60 text-slate-200 font-semibold focus:outline-none focus:border-purple-500"
+            className="px-3 py-1.5 rounded-md border border-slate-700 text-xs bg-slate-900 text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="ALL">Tất cả luồng</option>
             <option value="STREAM_A_MOET">Stream A (Bộ GD&ĐT)</option>
@@ -124,59 +124,59 @@ export const AdminStagingReviewPage: React.FC = () => {
       </div>
 
       {actionSuccess && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center space-x-2 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="p-3.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center space-x-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{actionSuccess}</span>
         </div>
       )}
 
       {/* Split-Pane UI */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Pane: Records List & Provenance Metadata (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <h2 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
-            Hàng đợi Chờ Kiểm duyệt ({records.length})
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Pane: Records List (5 cols) */}
+        <div className="lg:col-span-5 space-y-3">
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            Hàng đợi kiểm duyệt ({records.length})
           </h2>
 
-          <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
+          <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
             {records.map(rec => {
               const isSelected = selectedRecord?.id === rec.id;
               return (
                 <div
                   key={rec.id}
                   onClick={() => handleSelectRecord(rec)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer space-y-2 ${
+                  className={`p-3.5 rounded-md border transition-colors cursor-pointer space-y-2 ${
                     isSelected
-                      ? 'bg-purple-950/40 border-purple-500 shadow-md ring-1 ring-purple-500/50'
-                      : 'bg-slate-900/80 hover:bg-slate-850 border-slate-800 shadow-sm'
+                      ? 'bg-slate-800/80 border-blue-500'
+                      : 'bg-slate-900 hover:bg-slate-850 border-slate-800'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
                       rec.stream_type === 'STREAM_A_MOET'
-                        ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                        : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                        ? 'bg-blue-500/10 text-blue-300 border border-blue-500/30'
+                        : 'bg-purple-500/10 text-purple-300 border border-purple-500/30'
                     }`}>
                       {rec.stream_type === 'STREAM_A_MOET' ? 'STREAM A (MOET)' : 'STREAM B (ROADMAP)'}
                     </span>
 
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                       rec.status === 'APPROVED'
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
                         : rec.status === 'REJECTED'
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        ? 'bg-rose-500/10 text-rose-300 border border-rose-500/30'
+                        : 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
                     }`}>
                       {rec.status}
                     </span>
                   </div>
 
-                  <h3 className="text-xs font-bold text-white line-clamp-1">
+                  <h3 className="text-xs font-semibold text-white line-clamp-1">
                     {rec.major_code ? `[${rec.major_code}] ` : ''}{rec.source_title}
                   </h3>
 
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
-                    <span className="truncate max-w-[200px]">{rec.source_url}</span>
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                    <span className="truncate max-w-[180px]">{rec.source_url}</span>
                     <span>{new Date(rec.created_at).toLocaleDateString('vi-VN')}</span>
                   </div>
                 </div>
@@ -186,77 +186,77 @@ export const AdminStagingReviewPage: React.FC = () => {
 
           {/* Provenance Box of Selected Record */}
           {selectedRecord && (
-            <div className="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 text-xs space-y-2.5">
-              <h4 className="font-extrabold text-white flex items-center space-x-1.5 text-xs">
-                <Hash className="w-4 h-4 text-purple-400" />
-                <span>Truy Xuất Nguồn Gốc (Provenance Audit)</span>
+            <div className="bg-slate-900 rounded-md p-4 border border-slate-800 text-xs space-y-2">
+              <h4 className="font-semibold text-white flex items-center space-x-1.5">
+                <Hash className="w-3.5 h-3.5 text-blue-400" />
+                <span>Truy xuất nguồn gốc (Provenance Audit)</span>
               </h4>
-              <div className="space-y-1.5 text-[11px] text-slate-300 font-mono">
-                <p><strong>SHA-256 Hash:</strong> <span className="text-[10px] text-purple-300 break-all">{selectedRecord.content_hash}</span></p>
+              <div className="space-y-1 text-[11px] text-slate-300 font-mono">
+                <p><strong>SHA-256:</strong> <span className="text-[10px] text-slate-400 break-all">{selectedRecord.content_hash}</span></p>
                 <p><strong>Nguồn:</strong> {selectedRecord.source_title}</p>
-                <p><strong>Vị trí trích dẫn:</strong> {selectedRecord.source_page || 'Toàn văn'}</p>
-                <p><strong>URL gốc:</strong> <a href={selectedRecord.source_url} target="_blank" rel="noreferrer" className="text-indigo-400 underline truncate block">{selectedRecord.source_url}</a></p>
+                <p><strong>Trang/Vị trí:</strong> {selectedRecord.source_page || 'Toàn văn'}</p>
+                <p><strong>URL gốc:</strong> <a href={selectedRecord.source_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline truncate block">{selectedRecord.source_url}</a></p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Right Pane: Interactive Form / JSON Editor (7 cols) */}
+        {/* Right Pane: Editor (7 cols) */}
         {selectedRecord && editedPayload ? (
-          <div className="lg:col-span-7 bg-slate-900/80 rounded-3xl p-6 border border-slate-800 shadow-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="lg:col-span-7 bg-slate-900 rounded-lg p-5 border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
-                <span className="text-[10px] font-bold text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded border border-purple-500/30">
-                  Bản ghi Staging: {selectedRecord.id.slice(0, 8)}...
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                  ID: {selectedRecord.id.slice(0, 8)}...
                 </span>
-                <h3 className="text-base font-extrabold text-white mt-1">
-                  Biểu Mẫu Chỉnh Sửa Dữ Liệu Trước Khi Duyệt
+                <h3 className="text-sm font-bold text-white mt-1">
+                  Chỉnh Sửa Dữ Liệu Trước Khi Duyệt
                 </h3>
               </div>
 
               <button
                 type="button"
                 onClick={handleSaveEdit}
-                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors border border-slate-700"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition-colors"
               >
                 <Save className="w-3.5 h-3.5" />
-                <span>Lưu Nháp Sửa Đổi</span>
+                <span>Lưu nháp</span>
               </button>
             </div>
 
             {/* Editable Fields */}
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">Mã ngành cấp IV</label>
+                  <label className="block font-medium text-slate-300 mb-1">Mã ngành Cấp IV</label>
                   <input
                     type="text"
                     value={editedPayload.major_code || selectedRecord.major_code || ''}
                     onChange={(e) => setEditedPayload({ ...editedPayload, major_code: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-700 font-mono font-bold text-purple-300 focus:outline-none focus:border-purple-500"
+                    className="w-full px-2.5 py-1.5 rounded bg-slate-950 border border-slate-700 font-mono text-blue-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">Tên ngành đào tạo</label>
+                  <label className="block font-medium text-slate-300 mb-1">Tên ngành đào tạo</label>
                   <input
                     type="text"
                     value={editedPayload.major_title || editedPayload.major_name || ''}
                     onChange={(e) => setEditedPayload({ ...editedPayload, major_title: e.target.value, major_name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-700 font-bold text-white focus:outline-none focus:border-purple-500"
+                    className="w-full px-2.5 py-1.5 rounded bg-slate-950 border border-slate-700 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
-              {/* Milestones Preview or Edit */}
+              {/* Milestones Preview */}
               {editedPayload.milestones && (
-                <div className="space-y-2">
-                  <label className="block font-bold text-slate-300">Các mốc lộ trình ({editedPayload.milestones.length} mốc):</label>
-                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                <div className="space-y-1.5">
+                  <label className="block font-medium text-slate-300">Các mốc lộ trình ({editedPayload.milestones.length}):</label>
+                  <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                     {editedPayload.milestones.map((m: any, idx: number) => (
-                      <div key={idx} className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+                      <div key={idx} className="p-2.5 rounded bg-slate-950 border border-slate-800 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-extrabold text-white">Mốc {m.step}: {m.title}</span>
-                          <span className="text-[10px] text-slate-400 font-bold">{m.duration_weeks} tuần</span>
+                          <span className="font-semibold text-white">Mốc {m.step}: {m.title}</span>
+                          <span className="text-[10px] text-slate-400">{m.duration_weeks} tuần</span>
                         </div>
                         <p className="text-[11px] text-slate-400">{m.description}</p>
                       </div>
@@ -267,41 +267,41 @@ export const AdminStagingReviewPage: React.FC = () => {
 
               {/* Review Notes */}
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Ghi chú kiểm duyệt của Admin:</label>
+                <label className="block font-medium text-slate-300 mb-1">Ghi chú kiểm duyệt của Admin:</label>
                 <textarea
                   rows={2}
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Ghi chú xác thực đối chiếu với Thông tư 09 hoặc đề cương trường..."
-                  className="w-full p-3 rounded-xl bg-slate-950/60 border border-slate-700 text-slate-200 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                  placeholder="Ghi chú xác thực đối chiếu với Thông tư 09 hoặc đề cương..."
+                  className="w-full p-2.5 rounded bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
 
-            {/* Approval Decision Action Buttons */}
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-end space-x-3">
+            {/* Actions */}
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-end space-x-2">
               <button
                 type="button"
                 onClick={() => handleReviewDecision('REJECTED')}
-                className="px-5 py-2.5 rounded-xl border border-rose-500/40 text-rose-300 hover:bg-rose-950/30 font-bold text-xs transition-colors flex items-center space-x-1.5"
+                className="px-3.5 py-1.5 rounded-md border border-rose-500/40 text-rose-300 hover:bg-rose-950/30 font-medium text-xs transition-colors flex items-center space-x-1"
               >
-                <X className="w-4 h-4" />
-                <span>Từ chối (Reject)</span>
+                <X className="w-3.5 h-3.5" />
+                <span>Từ chối</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleReviewDecision('APPROVED')}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-900/30 transition-all flex items-center space-x-2"
+                className="px-4 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs shadow-xs transition-colors flex items-center space-x-1.5"
               >
-                <Check className="w-4 h-4 stroke-[3]" />
-                <span>Phê Duyệt & Xuất Bản vào Cache & pgvector</span>
+                <Check className="w-3.5 h-3.5" />
+                <span>Phê Duyệt & Xuất Bản</span>
               </button>
             </div>
           </div>
         ) : (
-          <div className="lg:col-span-7 bg-slate-900/80 rounded-3xl p-12 border border-slate-800 text-center text-slate-400 space-y-2">
-            <p className="text-sm font-bold text-slate-300">Chọn một bản ghi ở cột bên trái để kiểm duyệt.</p>
+          <div className="lg:col-span-7 bg-slate-900 rounded-lg p-10 border border-slate-800 text-center text-slate-400 text-xs">
+            Chọn một bản ghi ở danh sách bên trái để tiến hành kiểm duyệt.
           </div>
         )}
       </div>

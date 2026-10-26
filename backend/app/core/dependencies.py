@@ -10,6 +10,31 @@ from app.core.security import decode_access_token
 from app.models.identity import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/identity/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/identity/login", auto_error=False)
+
+
+async def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: Optional[AsyncSession] = Depends(get_db)
+) -> Optional[User]:
+    """Optionally authenticates user via JWT without raising 401 if missing."""
+    if not token or db is None:
+        return None
+    payload = decode_access_token(token)
+    if not payload:
+        return None
+    user_id_str: Optional[str] = payload.get("sub")
+    if not user_id_str:
+        return None
+    try:
+        user_id = uuid.UUID(user_id_str)
+    except ValueError:
+        return None
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user and not user.is_active:
+        return None
+    return user
 
 
 async def get_current_user(
