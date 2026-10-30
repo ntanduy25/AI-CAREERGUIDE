@@ -2,6 +2,7 @@ import { apiRequest } from './api';
 import {
   AuthResponse,
   User,
+  UserRole,
   RIASECQuestion,
   RIASECVector,
   MajorRecommendation,
@@ -83,6 +84,64 @@ export const authService = {
         access_token: 'session_token_' + Date.now(),
         token_type: 'bearer',
         user: newUser,
+      };
+    }
+  },
+
+  async googleLogin(data: {
+    email: string;
+    full_name?: string;
+    credential?: string;
+    google_id?: string;
+    avatar_url?: string;
+  }): Promise<AuthResponse> {
+    try {
+      const res = await apiRequest<{
+        access_token: string;
+        token_type: string;
+        role: UserRole;
+        user_id: string;
+      }>('/identity/google-login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+
+      const user: User = {
+        id: String(res.user_id),
+        email: data.email,
+        full_name: data.full_name || data.email.split('@')[0],
+        role: res.role,
+        created_at: new Date().toISOString(),
+      };
+
+      return {
+        access_token: res.access_token,
+        token_type: res.token_type,
+        user,
+      };
+    } catch (err: any) {
+      console.warn('[AuthService] Backend DB offline/unreachable for Google Login. Providing local fallback session:', err);
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const uniqueUserId = 'usr_g_' + Math.abs(normalizedEmail.split('').reduce((acc, char) => (acc << 5) - acc + char.charCodeAt(0), 0)).toString(36);
+
+      const googleUser: User = {
+        id: uniqueUserId,
+        email: data.email,
+        full_name: data.full_name || data.email.split('@')[0],
+        role: 'STUDENT',
+        created_at: new Date().toISOString(),
+      };
+
+      try {
+        const existingUsers = JSON.parse(localStorage.getItem('careerguide_local_users') || '{}');
+        existingUsers[normalizedEmail] = googleUser;
+        localStorage.setItem('careerguide_local_users', JSON.stringify(existingUsers));
+      } catch {}
+
+      return {
+        access_token: 'google_session_token_' + Date.now(),
+        token_type: 'bearer',
+        user: googleUser,
       };
     }
   },

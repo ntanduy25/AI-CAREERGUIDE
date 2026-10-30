@@ -55,3 +55,11 @@ class UserConsentResponse(BaseModel):
     revoked_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class GoogleLoginRequest(BaseModel):
+    email: EmailStr
+    full_name: Optional[str] = None
+    credential: Optional[str] = None
+    google_id: Optional[str] = None
+    avatar_url: Optional[str] = None

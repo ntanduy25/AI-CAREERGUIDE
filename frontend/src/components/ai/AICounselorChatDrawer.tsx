@@ -550,8 +550,8 @@ export const AICounselorChatDrawer: React.FC<AICounselorChatDrawerProps> = ({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Suggested Followup Questions (Prompt Pills) */}
-            {suggestedFollowups.length > 0 && !isSending && (
+            {/* Suggested Followup Questions (Prompt Pills) - Chỉ hiển thị khi bắt đầu đoạn chat mới, khi đã chat 1 câu thì ẩn đi không hiển thị lại */}
+            {!messages.some((m) => m.role === 'user') && suggestedFollowups.length > 0 && !isSending && (
               <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 shrink-0">
                 <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center space-x-1">
                   <HelpCircle className="w-3 h-3 text-slate-400" />

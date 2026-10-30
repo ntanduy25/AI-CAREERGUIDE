@@ -12,6 +12,7 @@ from app.schemas.identity import (
     UserResponse,
     UserConsentCreate,
     UserConsentResponse,
+    GoogleLoginRequest,
 )
 from app.services.identity import service
 
@@ -57,3 +58,9 @@ async def list_consents(
 ):
     """Retrieves all historical consent audit trails for the current user."""
     return await service.get_user_consents(db, current_user.id)
+
+
+@router.post("/google-login", response_model=TokenResponse)
+async def google_login(payload: GoogleLoginRequest, db: AsyncSession = Depends(get_db)):
+    """Authenticates or automatically registers a student via Google OAuth."""
+    return await service.authenticate_google_user(db, payload)
