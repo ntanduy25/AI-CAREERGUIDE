@@ -336,35 +336,10 @@ export const AssessmentPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setQuestionDetailCode(questionDetailCode === q.code ? null : q.code)}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black transition-all shrink-0 cursor-pointer ${
-                        questionDetailCode === q.code
-                          ? 'bg-brand-600 text-white shadow-xs'
-                          : 'bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200'
-                      }`}
-                      title="Bấm để xem chi tiết lý thuyết câu hỏi"
-                    >
-                      !
-                    </button>
+
                   </div>
 
-                  {questionDetailCode === q.code && (
-                    <div className="p-3.5 bg-brand-50/50 rounded-2xl border border-brand-200 text-xs text-slate-700 space-y-1.5 animate-in fade-in duration-150">
-                      <div className="flex items-center justify-between font-bold text-brand-900">
-                        <span>Chi tiết câu hỏi lý thuyết:</span>
-                        <span className="font-mono text-[10px] bg-white px-2 py-0.5 rounded border border-brand-200 text-brand-800">
-                          Mã Holland: {q.code}
-                        </span>
-                      </div>
-                      <div className="text-[11.5px] text-slate-600 space-y-1">
-                        <div><strong>Nhóm định hướng:</strong> {currentGroupMeta.name_vi} ({currentGroupMeta.badge})</div>
-                        {q.domain_tag && <div><strong>Lĩnh vực khảo sát:</strong> {q.domain_tag}</div>}
-                        <p className="text-[11px] text-slate-500 italic">Câu hỏi lý thuyết này khảo sát mức độ hứng thú và xu hướng năng khiếu của bạn theo chuẩn thang đo Holland.</p>
-                      </div>
-                    </div>
-                  )}
+
 
                   {/* 5-point Likert Scale Radio Grid */}
                   <div className="grid grid-cols-5 gap-2 pt-2 border-t border-slate-50">
@@ -457,31 +432,10 @@ export const AssessmentPage: React.FC = () => {
                     <div className="flex-1">
                       <h3 className="text-sm sm:text-base font-bold text-slate-900">{q.question_text || q.title}</h3>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setQuestionDetailCode(questionDetailCode === q.code ? null : q.code)}
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black transition-all shrink-0 cursor-pointer ${
-                        questionDetailCode === q.code
-                          ? 'bg-purple-600 text-white shadow-xs'
-                          : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200'
-                      }`}
-                      title="Bấm để xem chi tiết lý thuyết"
-                    >
-                      !
-                    </button>
+
                   </div>
 
-                  {questionDetailCode === q.code && (
-                    <div className="p-3.5 bg-purple-50/50 rounded-2xl border border-purple-200 text-xs text-slate-700 space-y-1 animate-in fade-in duration-150">
-                      <div className="flex items-center justify-between font-bold text-purple-900">
-                        <span>Chi tiết thiên hướng nhận thức:</span>
-                        <span className="font-mono text-[10px] bg-white px-2 py-0.5 rounded border border-purple-200 text-purple-800">
-                          Mã: {q.code}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-600">Đo lường phong cách tiếp thu, phương pháp giải quyết vấn đề và đối tượng tương tác chính.</p>
-                    </div>
-                  )}
+
 
                   {/* 4 Cards Grid (A, B, C, D) */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
@@ -495,29 +449,26 @@ export const AssessmentPage: React.FC = () => {
                             setCognitiveAnswer(dimKey, opt.option_key);
                             setCognitiveAnswer(q.code, opt.option_key);
                           }}
-                          className={`p-4 rounded-2xl border cursor-pointer transition-all space-y-2 ${
+                          className={`p-4 rounded-2xl border-2 cursor-pointer transition-all space-y-2.5 ${
                             isSelected
-                              ? 'bg-purple-50/80 border-purple-500 shadow-sm ring-1 ring-purple-400'
-                              : 'bg-slate-50/60 hover:bg-slate-100 border-slate-100'
+                              ? 'bg-purple-50/90 border-purple-600 shadow-sm ring-2 ring-purple-300'
+                              : 'bg-white hover:bg-slate-50/80 border-slate-200 hover:border-purple-300 shadow-2xs'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span
-                              className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${
+                              className={`w-7 h-7 rounded-xl text-xs font-black flex items-center justify-center transition-colors ${
                                 isSelected
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-slate-200 text-slate-700'
+                                  ? 'bg-purple-600 text-white shadow-xs'
+                                  : 'bg-slate-100 text-slate-700 border border-slate-200'
                               }`}
                             >
                               {opt.option_key}
                             </span>
-                            <span className="text-[10px] text-purple-600 font-mono font-bold">
-                              Mã lĩnh vực: {opt.related_moet_field_codes.join(', ')}
-                            </span>
                           </div>
 
-                          <h4 className="text-xs font-extrabold text-slate-900">{opt.title}</h4>
-                          <p className="text-[11px] text-slate-500 leading-relaxed font-normal">
+                          <h4 className="text-sm font-bold text-slate-900 leading-snug">{opt.title}</h4>
+                          <p className="text-xs text-slate-600 leading-relaxed font-normal">
                             {opt.description}
                           </p>
                         </div>

@@ -1,3 +1,4 @@
+import { getActiveCircular } from '../../constants/regulations';
 import React from 'react';
 import { Shield, BookOpen, Award, ExternalLink, CheckCircle } from 'lucide-react';
 
@@ -28,7 +29,7 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2 text-slate-400">
               <li className="flex items-center space-x-2">
                 <BookOpen className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                <span>Thông tư 09/2022/TT-BGDĐT (108 ngành cấp IV)</span>
+                <span>{getActiveCircular()} (108 ngành cấp IV)</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Award className="w-3.5 h-3.5 text-amber-400 shrink-0" />

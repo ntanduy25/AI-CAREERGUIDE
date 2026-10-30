@@ -422,7 +422,7 @@ export const RoadmapDetailPage: React.FC = () => {
       </div>
 
       {/* AI Assistant Help Banner */}
-      <div className="bg-linear-to-r from-blue-900 via-indigo-900 to-purple-950 rounded-lg p-5 text-white border border-indigo-700/50 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-950 rounded-lg p-5 text-white border border-indigo-700/50 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <span className="p-1.5 rounded-lg bg-white/10 text-cyan-300">

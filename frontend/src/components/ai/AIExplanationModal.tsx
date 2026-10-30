@@ -1,3 +1,4 @@
+import { getActiveCircular } from '../../constants/regulations';
 import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
@@ -115,19 +116,7 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
           </button>
         </div>
 
-        {/* AI Engine Status & Law 91 Badge */}
-        <div className="bg-slate-900 text-slate-200 px-6 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between text-[11px] gap-2">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold text-white">Báo Cáo Phân Tích Chuyên Sâu Do AI Cố Vấn Tự Động Sinh</span>
-            <span className="text-slate-400">•</span>
-            <span className="font-mono text-blue-300">Model: deepseek-4.1-flash-ckey</span>
-          </div>
-          <div className="flex items-center space-x-1.5 text-emerald-300 font-medium">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Khử khuẩn PII theo Luật 91/2025/QH15 & Chuẩn TT 09/2022/TT-BGDĐT</span>
-          </div>
-        </div>
+
 
         {/* Tabs Bar */}
         <div className="px-6 bg-white border-b border-slate-200 flex space-x-4 shrink-0">
@@ -180,7 +169,7 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
                 AI Cố vấn đang tổng hợp dữ liệu học bạ, RIASEC và bài test chẩn đoán để lập báo cáo...
               </p>
               <p className="text-xs text-slate-400">
-                (Áp dụng chuẩn Thông tư 09/2022/TT-BGDĐT và đối sánh 3 trụ cột độc lập)
+                (Áp dụng chuẩn {getActiveCircular()} và đối sánh 3 trụ cột độc lập)
               </p>
             </div>
           ) : error ? (
@@ -330,7 +319,7 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
           <div className="text-[11px] text-slate-500 flex items-center space-x-1.5">
             <span className="font-medium text-slate-600">Định hướng khách quan</span>
             <span>•</span>
-            <span className="font-semibold text-blue-700">Thông tư 09/2022/TT-BGDĐT</span>
+            <span className="font-semibold text-blue-700">{getActiveCircular()}</span>
           </div>
 
           <div className="flex items-center space-x-2.5 w-full sm:w-auto">

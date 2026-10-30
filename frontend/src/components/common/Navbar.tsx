@@ -60,9 +60,7 @@ export const Navbar: React.FC = () => {
               <span className="text-base font-bold text-slate-900 tracking-tight">
                 AI CareerGuide
               </span>
-              <span className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 bg-slate-100 rounded border border-slate-200">
-                TT 09/2022
-              </span>
+
             </div>
           </Link>
 
@@ -109,20 +107,21 @@ export const Navbar: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center space-x-2 px-2.5 py-1.5 rounded-md border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+                  className="flex items-center space-x-2.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all cursor-pointer shadow-2xs"
+                  title={user?.full_name || user?.email}
                 >
-                  <div className="w-7 h-7 rounded bg-blue-600 text-white flex items-center justify-center font-semibold text-xs">
+                  <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
                     {user?.full_name?.charAt(0) || user?.email.charAt(0).toUpperCase()}
                   </div>
-                  <div className="text-left hidden lg:block pr-1">
-                    <p className="text-xs font-semibold text-slate-800 leading-tight truncate max-w-[120px]">
+                  <div className="text-left hidden lg:block pr-0.5">
+                    <p className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[130px]">
                       {user?.full_name || 'Học sinh'}
                     </p>
-                    <p className="text-[10px] text-slate-500 capitalize">
-                      {user?.role === 'ADMIN' ? 'Quản trị viên' : 'Học sinh'}
-                    </p>
+                    <span className="inline-block text-[10px] text-slate-500 font-medium leading-none">
+                      {user?.role === 'ADMIN' ? 'Quản trị viên' : 'Học sinh THPT'}
+                    </span>
                   </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 </button>
 
                 {profileDropdownOpen && (

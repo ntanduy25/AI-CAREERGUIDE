@@ -1,3 +1,4 @@
+import { getActiveCircular } from '../../constants/regulations';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -233,7 +234,7 @@ export const RoadmapsHubPage: React.FC = () => {
                     Chọn Ngành Học Để Lập Lộ Trình
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Tra cứu trong 108 ngành cấp IV Thông tư 09/2022/TT-BGDĐT
+                    Tra cứu trong 108 ngành cấp IV {getActiveCircular()}
                   </p>
                 </div>
               </div>

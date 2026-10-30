@@ -1,3 +1,4 @@
+import { getActiveCircular, getActiveCircularShort } from '../../constants/regulations';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -85,7 +86,7 @@ export const TaxonomyPage: React.FC = () => {
               Danh Mục Giáo Dục Đào Tạo Cấp IV
             </h1>
             <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-mono font-semibold">
-              TT 09/2022/TT-BGDĐT
+              {getActiveCircularShort()}
             </span>
           </div>
           <p className="text-xs text-slate-500">
@@ -114,7 +115,7 @@ export const TaxonomyPage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             <span>
-              Hệ thống đang ở chế độ xem mẫu (6 ngành). Để xem toàn bộ 108 ngành theo Thông tư 09/2022/TT-BGDĐT, vui lòng đồng bộ dữ liệu.
+              Hệ thống đang ở chế độ xem mẫu (6 ngành). Để xem toàn bộ 108 ngành theo {getActiveCircular()}, vui lòng đồng bộ dữ liệu.
             </span>
           </div>
           <button

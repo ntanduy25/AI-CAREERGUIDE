@@ -1,3 +1,4 @@
+import { getActiveCircularShort } from '../../constants/regulations';
 import React from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
 import {
@@ -45,7 +46,7 @@ export const AdminLayout: React.FC = () => {
       to: '/admin/majors',
       label: 'Danh Mục Ngành Cấp IV',
       icon: BookOpen,
-      badge: 'TT 09/2022',
+      badge: getActiveCircularShort(),
     },
   ];
 

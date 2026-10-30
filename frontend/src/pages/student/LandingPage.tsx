@@ -1,3 +1,4 @@
+import { getActiveCircular } from '../../constants/regulations';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -70,7 +71,7 @@ export const LandingPage: React.FC = () => {
 
   const standards = [
     {
-      title: 'Thông tư 09/2022/TT-BGDĐT',
+      title: getActiveCircular(),
       desc: 'Bám sát 100% danh mục giáo dục đào tạo cấp IV quốc gia với 108 ngành đại học chính quy.',
     },
     {
@@ -104,7 +105,7 @@ export const LandingPage: React.FC = () => {
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
               Giải pháp tư vấn chọn ngành kết hợp 3 trụ cột khoa học: Khảo sát sở thích Holland RIASEC,
-              phân tích học bạ THPT chuẩn hóa Z-Score, và đối chiếu với danh mục đào tạo cấp IV Thông tư 09/2022/TT-BGDĐT.
+              phân tích học bạ THPT chuẩn hóa Z-Score, và đối chiếu với danh mục đào tạo cấp IV {getActiveCircular()}.
             </p>
 
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

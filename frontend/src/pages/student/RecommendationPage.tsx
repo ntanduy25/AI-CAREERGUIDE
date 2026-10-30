@@ -1,3 +1,4 @@
+import { getActiveCircularShort } from '../../constants/regulations';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -177,7 +178,7 @@ export const RecommendationPage: React.FC = () => {
               <Award className="w-4 h-4 text-amber-500" />
               <span>Bảng Xếp Hạng Ngành Phù Hợp Nhất</span>
             </h2>
-            <span className="text-[11px] text-slate-400 font-semibold">Theo Thông tư 09/2022</span>
+            <span className="text-[11px] text-slate-400 font-semibold">Theo {getActiveCircularShort()}</span>
           </div>
 
           <div className="space-y-3">

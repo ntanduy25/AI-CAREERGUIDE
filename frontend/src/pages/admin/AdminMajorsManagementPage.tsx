@@ -1,3 +1,4 @@
+import { getActiveCircular } from '../../constants/regulations';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -43,7 +44,7 @@ export const AdminMajorsManagementPage: React.FC = () => {
     setActionNotice('Đang đồng bộ dữ liệu trực tiếp từ CSDL...');
     const all = await taxonomyService.syncFromDatabase();
     setMajors(all);
-    setActionNotice('Đã đồng bộ toàn bộ 108 ngành cấp IV theo Thông tư 09/2022/TT-BGDĐT!');
+    setActionNotice('Đã đồng bộ toàn bộ 108 ngành cấp IV theo ${getActiveCircular()}!');
     setTimeout(() => setActionNotice(null), 4000);
   };
 
@@ -72,7 +73,7 @@ export const AdminMajorsManagementPage: React.FC = () => {
             </span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Danh mục giáo dục đào tạo cấp IV Thông tư 09/2022/TT-BGDĐT phục vụ bộ máy gợi ý XAI.
+            Danh mục giáo dục đào tạo cấp IV {getActiveCircular()} phục vụ bộ máy gợi ý XAI.
           </p>
         </div>
 

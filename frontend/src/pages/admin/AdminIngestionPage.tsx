@@ -1,3 +1,4 @@
+import { getActiveCircular, setActiveCircular, useActiveCircular, DEFAULT_MOET_CIRCULAR } from '../../constants/regulations';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -44,6 +45,8 @@ export const AdminIngestionPage: React.FC = () => {
   // Search & Filter for Extracted Majors
   const [searchFilter, setSearchFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const activeCircular = useActiveCircular();
+  const [circularInput, setCircularInput] = useState('');
 
   // Stream B states
   const [majorCode, setMajorCode] = useState('7480201');
@@ -107,6 +110,16 @@ export const AdminIngestionPage: React.FC = () => {
     setPublishSuccess(null);
 
     try {
+      // Auto-scan file name for circular number
+      if (fileToScan?.name) {
+        const matchName = fileToScan.name.match(/(?:Thông\s*tư|TT)?\s*(\d{1,3}[\/-]\d{4})(?:\/TT-BGDĐT)?/i);
+        if (matchName) {
+          const detected = matchName[1].replace('-', '/');
+          const newCirc = `Thông tư ${detected}/TT-BGDĐT`;
+          setActiveCircular(newCirc);
+        }
+      }
+
       setTimeout(() => {
         setScanProgress(35);
         setScanStep('AI đang phân tích 52 trang văn bản Thông tư & cấu trúc bảng biểu cấp IV...');
@@ -124,6 +137,15 @@ export const AdminIngestionPage: React.FC = () => {
 
       const result = await taxonomyService.aiScanMoetDocument(fileToScan);
 
+      if (result?.document_title) {
+        const matchTitle = result.document_title.match(/(?:Thông\s*tư|TT)?\s*(\d{1,3}[\/-]\d{4})(?:\/TT-BGDĐT)?/i);
+        if (matchTitle) {
+          const detected = matchTitle[1].replace('-', '/');
+          const newCirc = `Thông tư ${detected}/TT-BGDĐT`;
+          setActiveCircular(newCirc);
+        }
+      }
+
       setTimeout(() => {
         setScanProgress(100);
         setIsAiScanning(false);
@@ -137,6 +159,7 @@ export const AdminIngestionPage: React.FC = () => {
 
   const handleUseOfficialCircularPreset = () => {
     setSelectedFile(null);
+    setActiveCircular(DEFAULT_MOET_CIRCULAR);
     handleStartAiScan(null);
   };
 
@@ -244,6 +267,43 @@ export const AdminIngestionPage: React.FC = () => {
       {/* STREAM A: AI PDF Circular Ingestion */}
       {activeTab === 'STREAM_A' && (
         <div className="space-y-4">
+          {/* Active Circular Management Banner */}
+          <div className="bg-slate-900 rounded-xl p-4 border border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[11px] font-semibold text-slate-400 block">Thông tư Bộ GD&amp;ĐT đang kích hoạt toàn hệ thống:</span>
+                <span className="text-sm font-bold text-blue-300 font-mono">
+                  {activeCircular}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <input
+                type="text"
+                value={circularInput}
+                onChange={(e) => setCircularInput(e.target.value)}
+                placeholder="VD: Thông tư 15/2024/TT-BGDĐT"
+                className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 flex-1 sm:w-60"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (circularInput.trim()) {
+                    setActiveCircular(circularInput.trim());
+                    setCircularInput('');
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors shrink-0 cursor-pointer shadow-xs"
+              >
+                Cập nhật
+              </button>
+            </div>
+          </div>
+
           {/* Upload Card */}
           <div className="bg-slate-900 rounded-lg p-5 border border-slate-800 space-y-4">
             <div>
