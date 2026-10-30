@@ -1015,7 +1015,7 @@ async def test_llm_connection(payload: LLMConnectionTestRequest) -> LLMConnectio
     else:
         key = (settings.OPENAI_API_KEY or "").strip()
     base_url = (payload.base_url or settings.OPENAI_BASE_URL or "").strip()
-    model = (payload.model or settings.LLM_MODEL or "deepseek-4.1-flash-ckey").strip()
+    model = (payload.model or settings.LLM_MODEL or "dungcsnd113/deepseek-v4.1-flash-1017-free").strip()
 
     if not key:
         return LLMConnectionTestResponse(

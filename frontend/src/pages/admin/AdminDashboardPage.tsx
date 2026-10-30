@@ -40,7 +40,7 @@ export const AdminDashboardPage: React.FC = () => {
   const [showCustomConfig, setShowCustomConfig] = useState(false);
   const [customKey, setCustomKey] = useState('');
   const [customBaseUrl, setCustomBaseUrl] = useState('https://api.xah.io/v1');
-  const [customModel, setCustomModel] = useState('deepseek-4.1-flash-ckey');
+  const [customModel, setCustomModel] = useState('dungcsnd113/deepseek-v4.1-flash-1017-free');
   const [showKeyText, setShowKeyText] = useState(false);
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export const AdminDashboardPage: React.FC = () => {
         success: false,
         status_code: 500,
         latency_ms: 0,
-        model_used: customModel || 'deepseek-4.1-flash-ckey',
+        model_used: customModel || 'dungcsnd113/deepseek-v4.1-flash-1017-free',
         base_url: customBaseUrl || 'https://api.xah.io/v1',
         is_configured: false,
         message: e?.message || 'Lỗi khi gửi yêu cầu kiểm tra tới máy chủ.',
@@ -256,7 +256,7 @@ export const AdminDashboardPage: React.FC = () => {
                   Kiểm Tra Kết Nối LLM & API Key
                 </h3>
                 <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-cyan-300 border border-cyan-500/30">
-                  {llmStatus?.model || 'deepseek-4.1-flash-ckey'}
+                  {llmStatus?.model || 'dungcsnd113/deepseek-v4.1-flash-1017-free'}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
@@ -287,7 +287,7 @@ export const AdminDashboardPage: React.FC = () => {
               Mô hình suy luận (LLM):
             </span>
             <div className="font-mono text-cyan-300 font-bold truncate">
-              {llmStatus?.model || 'deepseek-4.1-flash-ckey'}
+              {llmStatus?.model || 'dungcsnd113/deepseek-v4.1-flash-1017-free'}
             </div>
           </div>
 
@@ -411,7 +411,7 @@ export const AdminDashboardPage: React.FC = () => {
                   type="text"
                   value={customModel}
                   onChange={(e) => setCustomModel(e.target.value)}
-                  placeholder="deepseek-4.1-flash-ckey"
+                  placeholder="dungcsnd113/deepseek-v4.1-flash-1017-free"
                   className="w-full text-xs font-mono rounded-md bg-slate-900 border border-slate-700 px-3 py-1.5 text-white placeholder-slate-500 focus:outline-hidden focus:border-cyan-500"
                 />
               </div>
@@ -420,7 +420,7 @@ export const AdminDashboardPage: React.FC = () => {
             {/* Quick model pills */}
             <div className="flex flex-wrap items-center gap-1.5 pt-1">
               <span className="text-[10px] text-slate-400">Chọn nhanh mô hình:</span>
-              {['deepseek-4.1-flash-ckey', 'deepseek-chat', 'deepseek-reasoner', 'gpt-4o-mini'].map((m) => (
+              {['dungcsnd113/deepseek-v4.1-flash-1017-free', 'deepseek-chat', 'deepseek-reasoner', 'gpt-4o-mini'].map((m) => (
                 <button
                   key={m}
                   type="button"

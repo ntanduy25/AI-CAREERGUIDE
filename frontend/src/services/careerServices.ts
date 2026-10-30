@@ -1844,7 +1844,7 @@ export const aiGuidanceService = {
       return await apiRequest('/rag-governance/llm-status');
     } catch {
       return {
-        model: 'deepseek-4.1-flash-ckey',
+        model: 'dungcsnd113/deepseek-v4.1-flash-1017-free',
         base_url: 'https://api.xah.io/v1',
         is_key_configured: false,
         masked_key: null,
@@ -1864,7 +1864,7 @@ export const aiGuidanceService = {
         success: false,
         status_code: err.status || 500,
         latency_ms: 0,
-        model_used: params?.model || 'deepseek-4.1-flash-ckey',
+        model_used: params?.model || 'dungcsnd113/deepseek-v4.1-flash-1017-free',
         base_url: params?.base_url || 'https://api.xah.io/v1',
         is_configured: !!params?.api_key,
         message: err.message || 'Không thể kết nối đến máy chủ backend để kiểm tra.',

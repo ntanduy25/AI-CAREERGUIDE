@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     EMBEDDING_DIMENSION: int = 1536
-    LLM_MODEL: str = "deepseek-4.1-flash-ckey"
+    LLM_MODEL: str = "dungcsnd113/deepseek-v4.1-flash-1017-free"
 
     # 3-Pillar Scoring Weights (Default: RIASEC 0.45, Academic 0.35, Preference 0.20)
     WEIGHT_RIASEC: float = 0.45
