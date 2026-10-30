@@ -51,7 +51,10 @@ async def get_text_embedding(text: str) -> List[float]:
     if settings.OPENAI_API_KEY:
         try:
             from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+            client_kwargs = {'api_key': settings.OPENAI_API_KEY, 'timeout': 8.0}
+            if settings.OPENAI_BASE_URL:
+                client_kwargs['base_url'] = settings.OPENAI_BASE_URL
+            client = AsyncOpenAI(**client_kwargs)
             res = await client.embeddings.create(
                 input=[text[:8000]],
                 model=settings.EMBEDDING_MODEL

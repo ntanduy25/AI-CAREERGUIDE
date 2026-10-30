@@ -8,6 +8,10 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 
 from app.core.config import settings
+
+@pytest.fixture(autouse=True)
+def mock_openai_key_in_tests(monkeypatch):
+    monkeypatch.setattr(settings, "OPENAI_API_KEY", "")
 from app.models.staging import StagingRecord, StagingStreamType, StagingStatus
 from app.models.roadmap import MajorRoadmap
 from app.models.vector import KnowledgeEmbedding
@@ -210,9 +214,11 @@ class TestStreamBDiscovery:
         )
         db.execute.return_value = mock_res
 
-        with pytest.raises(HTTPException) as exc:
-            await discover_and_stage_roadmap(db, "7480201", "Công nghệ thông tin")
-        assert exc.value.status_code == status.HTTP_409_CONFLICT
+        with patch("app.services.llamaindex_rag_orchestrator.stream_b_discovery.discover_academic_resources_via_tavily") as mock_disc:
+            mock_disc.return_value = [{"title": "Chương trình", "url": "https://vnu.edu.vn/curriculum/7480201", "snippet": "Snippet", "raw_content": "Content"}]
+            with pytest.raises(HTTPException) as exc:
+                await discover_and_stage_roadmap(db, "7480201", "Công nghệ thông tin")
+            assert exc.value.status_code == status.HTTP_409_CONFLICT
 
 
 # =========================================================================

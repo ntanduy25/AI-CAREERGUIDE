@@ -1682,7 +1682,7 @@ export const aiGuidanceService = {
         riasec_alignment: `Vector sở thích nghề nghiệp của bạn phản ánh sự nổi trội ở các nhóm nghiên cứu (I) và kỹ thuật/nghiệp vụ, rất phù hợp với đặc thù công việc và môi trường học tập ngành ${majorName}.`,
         academic_alignment: `Điểm các môn tự nhiên/xã hội trong học bạ của bạn đáp ứng tốt yêu cầu đầu vào của các tổ hợp môn xét tuyển ${major?.blocks?.join(', ') || 'A00, A01, D01'}.`,
         diagnostic_readiness: diagCount > 0
-          ? `Bạn đã đạt chuẩn ${diagCount} kỹ năng qua bài kiểm tra chẩn đoán đầu vào (FR03), được tự động loại bỏ khỏi danh sách môn học tiên quyết thiếu hụt.`
+          ? `Bạn đã đạt chuẩn ${diagCount} kỹ năng qua bài kiểm tra chẩn đoán kỹ năng đầu vào, được tự động loại bỏ khỏi danh sách môn học tiên quyết thiếu hụt.`
           : `Bạn chưa làm bài kiểm tra chẩn đoán năng lực đầu vào. Hãy làm bài test 10 phút để xác thực các kỹ năng nền tảng.`,
         strengths: [
           'Tương thích cao về đặc điểm tính cách và sở thích theo thang Holland RIASEC',
@@ -1726,7 +1726,7 @@ export const aiGuidanceService = {
       const majorName = major?.name || 'ngành học bạn quan tâm';
       const q = params.message.toLowerCase();
 
-      let reply = `Chào bạn! Tôi là Cố vấn Hướng nghiệp AI CareerGuide. Tôi đồng hành cùng bạn dựa trên kết quả khảo sát RIASEC, điểm học bạ và bài test chẩn đoán kỹ năng đầu vào (FR03).\n\nMọi dữ liệu học tập của bạn được bảo mật tuyệt đối theo Luật 91/2025/QH15. Bạn có câu hỏi nào về ${majorName} không?`;
+      let reply = `Chào bạn! Tôi là Cố vấn Hướng nghiệp AI CareerGuide. Tôi đồng hành cùng bạn dựa trên kết quả khảo sát sở thích nghề nghiệp, điểm học bạ và bài kiểm tra chẩn đoán kỹ năng đầu vào.\n\nMọi dữ liệu học tập của bạn được bảo mật tuyệt đối theo Luật 91/2025/QH15. Bạn có câu hỏi nào về ${majorName} không?`;
       let followups = [
         `Vì sao em phù hợp với ${majorName}?`,
         'Em cần chuẩn bị những kỹ năng gì cho ngành này?',
@@ -1734,7 +1734,7 @@ export const aiGuidanceService = {
       ];
 
       if (q.includes('tại sao') || q.includes('vì sao') || q.includes('phù hợp') || q.includes('lí do')) {
-        reply = `Hệ thống đề xuất ${majorName} cho bạn dựa trên 3 trụ cột khoa học:\n1. **Sở thích Holland (45%):** Tính cách và cách tiếp cận công việc của bạn hòa hợp với đặc thù ngành.\n2. **Điểm học bạ (35%):** Năng lực học tập của bạn ở các môn then chốt đáp ứng tốt ngưỡng tuyển sinh.\n3. **Kỹ năng chẩn đoán FR03:** ` + (
+        reply = `Hệ thống đề xuất ${majorName} cho bạn dựa trên 3 trụ cột khoa học:\n1. **Sở thích nghề nghiệp (45%):** Tính cách và cách tiếp cận công việc của bạn hòa hợp với đặc thù ngành.\n2. **Điểm học bạ (35%):** Năng lực học tập của bạn ở các môn then chốt đáp ứng tốt ngưỡng tuyển sinh.\n3. **Kỹ năng chẩn đoán đầu vào:** ` + (
           params.diagnostic_skills_mastered && params.diagnostic_skills_mastered.length > 0
             ? `Bạn đã đạt chuẩn ${params.diagnostic_skills_mastered.length} kỹ năng chẩn đoán, giúp giảm bớt học phần tiên quyết thiếu hụt.`
             : `Làm thêm bài kiểm tra chẩn đoán năng lực 10 phút sẽ giúp bạn nhận diện chính xác các kỹ năng cần bổ sung.`
@@ -1752,7 +1752,7 @@ export const aiGuidanceService = {
           'Vị trí việc làm tiêu biểu của ngành này là gì?',
         ];
       } else if (q.includes('việc làm') || q.includes('nghề nghiệp') || q.includes('ra trường') || q.includes('cơ hội')) {
-        reply = `Sinh viên tốt nghiệp ${majorName} có thể đảm nhận các vị trí việc làm tiêu biểu:\n` +
+        reply = `Sinh viên tốt nghiệp **${majorName}** có thể đảm nhận các vị trí việc làm tiêu biểu:\n` +
           (major?.careers && major.careers.length > 0
             ? major.careers.map((c) => `- ${c}`).join('\n')
             : '- Chuyên viên kỹ thuật và phát triển giải pháp\n- Chuyên viên phân tích nghiệp vụ\n- Nghiên cứu viên hoặc quản lý dự án') +
@@ -1761,6 +1761,13 @@ export const aiGuidanceService = {
           `Giải thích thêm về mức lương và triển vọng của ${majorName}?`,
           `Em cần trau dồi những kỹ năng mềm nào?`,
           `Tạo lộ trình học tập cá nhân hóa cho ngành này.`,
+        ];
+      } else if (q.includes('là gì') || q.includes('thế nào') || q.includes('giới thiệu') || q.includes('gioi thieu')) {
+        reply = `### Ngành ${majorName} là gì?\n\n**${majorName}** là ngành đào tạo chuyên môn cung cấp cho người học khối kiến thức hệ thống và năng lực thực hành nghề nghiệp chất lượng cao.\n\n- **Đặc trưng ngành:** Kết hợp giữa lý thuyết chuyên sâu và ứng dụng thực tiễn trong thời đại chuyển đổi số.\n- **Kỹ năng cốt lõi:** Tư duy phân tích, giải quyết vấn đề phức tạp và khả năng tự nghiên cứu, làm việc nhóm.\n- **Lời khuyên từ Cố vấn AI:** Hãy chú trọng các môn học trọng tâm và hoàn thành bài kiểm tra chẩn đoán để tối ưu lộ trình học tập.`;
+        followups = [
+          `Vì sao em phù hợp với ${majorName}?`,
+          `Cơ hội việc làm sau khi tốt nghiệp ${majorName} thế nào?`,
+          `Em cần cải thiện môn học nào cho tổ hợp xét tuyển?`,
         ];
       }
 

@@ -118,7 +118,10 @@ async def extract_roadmap_with_llm(
     if settings.OPENAI_API_KEY:
         try:
             from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+            client_kwargs = {"api_key": settings.OPENAI_API_KEY}
+            if settings.OPENAI_BASE_URL:
+                client_kwargs["base_url"] = settings.OPENAI_BASE_URL
+            client = AsyncOpenAI(**client_kwargs)
             
             prompt = (
                 f"Bạn là chuyên gia giáo dục đại học chuẩn hóa chương trình đào tạo theo Thông tư 09/2022/TT-BGDĐT.\n"
@@ -146,6 +149,43 @@ async def extract_roadmap_with_llm(
                 parsed.source_title = source_title
                 parsed.source_url = source_url
                 parsed.source_page = parsed.source_page or "Cổng đào tạo trực tuyến"
+                if len(parsed.prerequisite_knowledge) < 2:
+                    parsed.prerequisite_knowledge = [
+                        "Kiến thức Toán học và logic phân tích theo chuẩn THPT",
+                        "Năng lực tư duy giải quyết vấn đề khoa học cơ bản"
+                    ]
+                if len(parsed.target_skills) < 2:
+                    parsed.target_skills = [
+                        f"Kỹ năng phân tích và thiết kế hệ thống trong lĩnh vực {major_title}",
+                        "Năng lực vận dụng công nghệ thông tin và công cụ số chuyên ngành"
+                    ]
+                if len(parsed.milestones) < 3:
+                    parsed.milestones = [
+                        RoadmapMilestoneSchema(
+                            step=1,
+                            title=f"Giai đoạn 1: Nền tảng khoa học cơ bản và nhập môn {major_title}",
+                            description=f"Tiếp cận các nguyên lý nền tảng của ngành {major_title}.",
+                            duration_weeks=4,
+                            learning_objectives=["Nắm vững nguyên lý nền tảng", "Xây dựng phương pháp tự học"],
+                            actions=["Tham khảo đề cương chi tiết", "Tham gia thảo luận nhóm"]
+                        ),
+                        RoadmapMilestoneSchema(
+                            step=2,
+                            title=f"Giai đoạn 2: Khối kiến thức cơ sở ngành {major_title}",
+                            description="Đào sâu các môn học tiên quyết và kỹ năng then chốt.",
+                            duration_weeks=8,
+                            learning_objectives=["Làm chủ công cụ tính toán", "Hoàn thành bài tập lớn"],
+                            actions=["Thực hành tình huống thực tế", "Hoàn thiện chuẩn đầu ra cơ sở"]
+                        ),
+                        RoadmapMilestoneSchema(
+                            step=3,
+                            title=f"Giai đoạn 3: Chuyên ngành chuyên sâu và dự án tích hợp",
+                            description="Nâng cao năng lực giải quyết vấn đề phức tạp.",
+                            duration_weeks=12,
+                            learning_objectives=["Vận dụng kiến thức liên ngành", "Đáp ứng tiêu chuẩn nghề nghiệp"],
+                            actions=["Tham gia đồ án chuyên ngành", "Thực tập doanh nghiệp"]
+                        )
+                    ]
                 return parsed
         except Exception as exc:
             logger.warning(f"OpenAI structured extraction failed: {exc}")

@@ -16,6 +16,20 @@ from app.services.llamaindex_rag_orchestrator import router as rag_governance_ro
 async def lifespan(app: FastAPI):
     # Startup tasks
     print("Starting AI CareerGuide Backend Core...")
+    try:
+        from sqlalchemy import text
+        from app.core.database import engine, Base
+        import app.models  # load models
+        async with engine.begin() as conn:
+            if settings.DATABASE_URL.startswith("postgresql"):
+                try:
+                    await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                except Exception as ext_err:
+                    print(f"pgvector extension check: {ext_err}")
+            await conn.run_sync(Base.metadata.create_all)
+        print("Database schema tables verified successfully.")
+    except Exception as db_err:
+        print(f"Database startup check notice (offline or uninitialized): {db_err}")
     yield
     # Shutdown tasks
     print("Shutting down AI CareerGuide Backend Core...")

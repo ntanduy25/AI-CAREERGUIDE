@@ -22,6 +22,7 @@ export const TaxonomyPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
+  const [openDetailCode, setOpenDetailCode] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close category dropdown on outside click
@@ -281,32 +282,33 @@ export const TaxonomyPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Admission Blocks & Holland RIASEC */}
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
-                <div>
-                  <span className="text-slate-500 font-medium block mb-1">Tổ hợp xét tuyển:</span>
-                  <div className="flex flex-wrap gap-1">
-                    {m.blocks.map((b) => (
-                      <span
-                        key={b}
-                        className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-mono text-[10px] font-semibold"
-                      >
-                        {b}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-slate-500 font-medium block mb-1">Holland RIASEC:</span>
-                  <div className="font-mono text-[11px] space-x-1 text-slate-700 font-medium">
-                    <span>R:{m.riasec.R}</span>
-                    <span>I:{m.riasec.I}</span>
-                    <span>A:{m.riasec.A}</span>
-                    <span>S:{m.riasec.S}</span>
-                  </div>
-                </div>
+              {/* Clean Details Disclosure with Exclamation Button */}
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  onClick={() => setOpenDetailCode(openDetailCode === m.major_code ? null : m.major_code)}
+                  className="inline-flex items-center space-x-1.5 text-slate-500 hover:text-blue-600 transition-colors cursor-pointer"
+                  title="Xem chi tiết thiên hướng ngành"
+                >
+                  <span className="w-4 h-4 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-black flex items-center justify-center text-[10px]">!</span>
+                  <span className="text-[11px] font-medium">Chi tiết thiên hướng nghề nghiệp</span>
+                </button>
               </div>
+
+              {openDetailCode === m.major_code && (
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1.5 animate-in fade-in duration-150">
+                  <div className="font-semibold text-slate-900 flex items-center justify-between">
+                    <span>Chỉ số tương thích Holland:</span>
+                    <span className="font-mono text-[10px] text-blue-700">Mã: {m.major_code}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-800 rounded font-medium text-[11px]">Thực tế (R): {Math.round(m.riasec.R * 100)}%</span>
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-800 rounded font-medium text-[11px]">Nghiên cứu (I): {Math.round(m.riasec.I * 100)}%</span>
+                    <span className="px-2 py-0.5 bg-purple-50 text-purple-800 rounded font-medium text-[11px]">Nghệ thuật (A): {Math.round(m.riasec.A * 100)}%</span>
+                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded font-medium text-[11px]">Xã hội (S): {Math.round(m.riasec.S * 100)}%</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Card Footer */}

@@ -13,9 +13,14 @@ import {
   Award,
   BookOpen,
   RefreshCw,
+  Cpu,
+  Layers,
+  Target,
+  FileText,
 } from 'lucide-react';
 import { AIExplanationResponse } from '../../types';
 import { aiGuidanceService } from '../../services/careerServices';
+import { AIMarkdownRenderer } from './AIMarkdownRenderer';
 
 interface AIExplanationModalProps {
   isOpen: boolean;
@@ -45,6 +50,7 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
   const [data, setData] = useState<AIExplanationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'dossier' | 'pillars' | 'action_plan'>('dossier');
 
   useEffect(() => {
     if (!isOpen || !majorCode) return;
@@ -76,20 +82,20 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-6">
+      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/90 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-4">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-start justify-between">
+        <div className="px-6 py-4.5 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-blue-50/30 to-indigo-50/20 flex items-start justify-between">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                <Sparkles className="w-4 h-4" />
+            <div className="flex items-center space-x-2.5">
+              <span className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md">
+                <Sparkles className="w-5 h-5" />
               </span>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                    Giải Trình AI Định Hướng Ngành Học (XAI)
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                    Giải Trình AI Định Hướng Ngành Học (XAI Report)
                   </h2>
-                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-200">
                     {majorCode}
                   </span>
                 </div>
@@ -103,133 +109,231 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Privacy Shield Notice (Law 91/2025 Compliance) */}
-        <div className="bg-emerald-50/80 px-6 py-2.5 border-b border-emerald-100 flex items-center space-x-2 text-xs text-emerald-900">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>
-            <strong>Bảo vệ dữ liệu cá nhân (Luật 91/2025/QH15):</strong> Phân tích hoàn toàn dựa trên điểm số và kết quả bài test đã ẩn danh; tuyệt đối không gửi tên, trường lớp, số điện thoại hay thông tin định danh của học sinh.
-          </span>
+        {/* AI Engine Status & Law 91 Badge */}
+        <div className="bg-slate-900 text-slate-200 px-6 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between text-[11px] gap-2">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-semibold text-white">Báo Cáo Phân Tích Chuyên Sâu Do AI Cố Vấn Tự Động Sinh</span>
+            <span className="text-slate-400">•</span>
+            <span className="font-mono text-blue-300">Model: deepseek-4.1-flash-ckey</span>
+          </div>
+          <div className="flex items-center space-x-1.5 text-emerald-300 font-medium">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Khử khuẩn PII theo Luật 91/2025/QH15 & Chuẩn TT 09/2022/TT-BGDĐT</span>
+          </div>
+        </div>
+
+        {/* Tabs Bar */}
+        <div className="px-6 bg-white border-b border-slate-200 flex space-x-4 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('dossier')}
+            className={`py-3 text-xs sm:text-sm font-semibold border-b-2 flex items-center space-x-1.5 transition-colors cursor-pointer ${
+              activeTab === 'dossier'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>1. Bản Báo Cáo Chuyên Sâu (AI Dossier)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('pillars')}
+            className={`py-3 text-xs sm:text-sm font-semibold border-b-2 flex items-center space-x-1.5 transition-colors cursor-pointer ${
+              activeTab === 'pillars'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>2. Bóc Tách 3 Trụ Cột Độc Lập</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('action_plan')}
+            className={`py-3 text-xs sm:text-sm font-semibold border-b-2 flex items-center space-x-1.5 transition-colors cursor-pointer ${
+              activeTab === 'action_plan'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Target className="w-4 h-4" />
+            <span>3. Thế Mạnh & Lộ Trình Hành Động</span>
+          </button>
         </div>
 
         {/* Body Content */}
         <div className="p-6 overflow-y-auto space-y-5 flex-1 text-slate-800">
           {loading ? (
-            <div className="py-16 text-center space-y-3">
-              <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-semibold text-slate-600">
-                AI Cố vấn đang phân tích kết quả bài test và học bạ của bạn...
+            <div className="py-20 text-center space-y-3">
+              <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-sm font-semibold text-slate-700">
+                AI Cố vấn đang tổng hợp dữ liệu học bạ, RIASEC và bài test chẩn đoán để lập báo cáo...
               </p>
-              <p className="text-[11px] text-slate-400">
-                (Áp dụng chuẩn Thông tư 09/2022/TT-BGDĐT và đối sánh 3 trụ cột)
+              <p className="text-xs text-slate-400">
+                (Áp dụng chuẩn Thông tư 09/2022/TT-BGDĐT và đối sánh 3 trụ cột độc lập)
               </p>
             </div>
           ) : error ? (
-            <div className="p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
+            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           ) : data ? (
             <>
-              {/* Detailed Synthesis */}
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
-                <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-900 uppercase tracking-wider">
-                  <BookOpen className="w-4 h-4 text-blue-600" />
-                  <span>Tổng quan lý do đề xuất ngành</span>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-                  {data.detailed_explanation}
-                </p>
-              </div>
+              {/* TAB 1: AI DOSSIER (BÁO CÁO PHÂN TÍCH TOÀN DIỆN) */}
+              {activeTab === 'dossier' && (
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  <div className="bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50 p-5 rounded-xl border border-blue-200/80 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-blue-200/60">
+                      <div className="flex items-center space-x-2 text-xs font-bold text-blue-900 uppercase tracking-wider">
+                        <Sparkles className="w-4 h-4 text-blue-600" />
+                        <span>Bản Phân Tích Tương Thích & Giải Trình Định Hướng</span>
+                      </div>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-xs">
+                        Tự động sinh bởi AI
+                      </span>
+                    </div>
 
-              {/* 3 Pillars Deep Dive Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                {/* Pillar 1: RIASEC */}
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-2">
-                  <div className="flex items-center space-x-2 text-blue-700 font-bold text-xs">
-                    <BrainCircuit className="w-4 h-4" />
-                    <span>1. Sở thích Holland RIASEC</span>
+                    <AIMarkdownRenderer
+                      content={data.detailed_explanation}
+                      className="text-slate-800"
+                    />
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {data.riasec_alignment}
-                  </p>
-                </div>
 
-                {/* Pillar 2: Academic */}
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-2">
-                  <div className="flex items-center space-x-2 text-emerald-700 font-bold text-xs">
-                    <FileSpreadsheet className="w-4 h-4" />
-                    <span>2. Năng lực Học bạ THPT</span>
+                  {/* Highlights Summary Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                      <div className="text-[11px] font-bold text-blue-700 uppercase">Sở thích nghề nghiệp</div>
+                      <p className="text-xs text-slate-600 line-clamp-3">
+                        {data.riasec_alignment}
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                      <div className="text-[11px] font-bold text-emerald-700 uppercase">Học bạ THPT</div>
+                      <p className="text-xs text-slate-600 line-clamp-3">
+                        {data.academic_alignment}
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                      <div className="text-[11px] font-bold text-purple-700 uppercase">Chẩn đoán năng lực</div>
+                      <p className="text-xs text-slate-600 line-clamp-3">
+                        {data.diagnostic_readiness}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {data.academic_alignment}
-                  </p>
                 </div>
+              )}
 
-                {/* Pillar 3: Diagnostic FR03 */}
-                <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-2">
-                  <div className="flex items-center space-x-2 text-purple-700 font-bold text-xs">
-                    <Award className="w-4 h-4" />
-                    <span>3. Chẩn đoán Kỹ năng (FR03)</span>
+              {/* TAB 2: 3 PILLARS DEEP DIVE */}
+              {activeTab === 'pillars' && (
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  {/* Pillar 1: RIASEC */}
+                  <div className="bg-white p-5 rounded-xl border border-blue-200/80 shadow-xs space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-blue-800 font-bold text-sm">
+                        <BrainCircuit className="w-5 h-5 text-blue-600" />
+                        <span>Trụ cột 1: Độ Tương Thích Sở Thích Nghề Nghiệp</span>
+                      </div>
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                        Trọng số 45%
+                      </span>
+                    </div>
+                    <AIMarkdownRenderer content={data.riasec_alignment} />
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {data.diagnostic_readiness}
-                  </p>
-                </div>
-              </div>
 
-              {/* Strengths & Focus Areas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                {/* Strengths */}
-                <div className="bg-emerald-50/50 p-4 rounded-lg border border-emerald-200 space-y-2">
-                  <div className="flex items-center space-x-1.5 text-xs font-bold text-emerald-900">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Thế mạnh cốt lõi của bạn với ngành:</span>
+                  {/* Pillar 2: Academic */}
+                  <div className="bg-white p-5 rounded-xl border border-emerald-200/80 shadow-xs space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-emerald-800 font-bold text-sm">
+                        <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+                        <span>Trụ cột 2: Năng Lực Học Thuật</span>
+                      </div>
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        Trọng số 35%
+                      </span>
+                    </div>
+                    <AIMarkdownRenderer content={data.academic_alignment} />
                   </div>
-                  <ul className="space-y-1.5 text-xs text-emerald-900">
-                    {data.strengths.map((str, idx) => (
-                      <li key={idx} className="flex items-start space-x-2">
-                        <span className="text-emerald-600 font-bold">•</span>
-                        <span>{str}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
 
-                {/* Focus Areas */}
-                <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-200 space-y-2">
-                  <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
-                    <AlertCircle className="w-4 h-4 text-blue-600" />
-                    <span>Kiến thức / Kỹ năng cần trau dồi thêm:</span>
+                  {/* Pillar 3: Diagnostic */}
+                  <div className="bg-white p-5 rounded-xl border border-purple-200/80 shadow-xs space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-purple-800 font-bold text-sm">
+                        <Award className="w-5 h-5 text-purple-600" />
+                        <span>Trụ cột 3: Chẩn Đoán Kỹ Năng Nền Tảng Đầu Vào</span>
+                      </div>
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                        Miễn trừ học phần
+                      </span>
+                    </div>
+                    <AIMarkdownRenderer content={data.diagnostic_readiness} />
                   </div>
-                  <ul className="space-y-1.5 text-xs text-blue-900">
-                    {data.recommended_focus_areas.map((rec, idx) => (
-                      <li key={idx} className="flex items-start space-x-2">
-                        <span className="text-blue-600 font-bold">•</span>
-                        <span>{rec}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
-              </div>
+              )}
+
+              {/* TAB 3: STRENGTHS & ACTION PLAN */}
+              {activeTab === 'action_plan' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-200">
+                  {/* Strengths */}
+                  <div className="bg-gradient-to-br from-emerald-50/60 to-white p-5 rounded-xl border border-emerald-200 space-y-3 shadow-xs">
+                    <div className="flex items-center space-x-2 text-sm font-bold text-emerald-900 pb-2 border-b border-emerald-100">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <span>Thế Mạnh Nổi Bật Của Bạn Với Ngành</span>
+                    </div>
+                    <ul className="space-y-2.5 text-xs sm:text-sm text-slate-700">
+                      {data.strengths.map((str, idx) => (
+                        <li key={idx} className="flex items-start space-x-2.5">
+                          <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <span className="leading-relaxed font-medium">{str}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Focus Areas */}
+                  <div className="bg-gradient-to-br from-blue-50/60 to-white p-5 rounded-xl border border-blue-200 space-y-3 shadow-xs">
+                    <div className="flex items-center space-x-2 text-sm font-bold text-blue-900 pb-2 border-b border-blue-100">
+                      <AlertCircle className="w-5 h-5 text-blue-600 shrink-0" />
+                      <span>Kế Hoạch Bứt Phá & Trọng Tâm Cần Ôn Luyện</span>
+                    </div>
+                    <ul className="space-y-2.5 text-xs sm:text-sm text-slate-700">
+                      {data.recommended_focus_areas.map((rec, idx) => (
+                        <li key={idx} className="flex items-start space-x-2.5">
+                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <span className="leading-relaxed font-medium">{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </>
           ) : null}
         </div>
 
         {/* Footer Actions */}
         <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-[11px] text-slate-500 flex items-center space-x-1">
-            <span>Mô hình đề xuất Pure Guidance Scope</span>
+          <div className="text-[11px] text-slate-500 flex items-center space-x-1.5">
+            <span className="font-medium text-slate-600">Định hướng khách quan</span>
             <span>•</span>
-            <span className="font-semibold text-blue-600">Thông tư 09/2022/TT-BGDĐT</span>
+            <span className="font-semibold text-blue-700">Thông tư 09/2022/TT-BGDĐT</span>
           </div>
 
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
+          <div className="flex items-center space-x-2.5 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => {
@@ -244,10 +348,10 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
                   );
                 }
               }}
-              className="w-full sm:w-auto px-4 py-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold text-xs flex items-center justify-center space-x-1.5 transition-colors shadow-xs cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold text-xs sm:text-sm flex items-center justify-center space-x-2 transition-colors shadow-xs cursor-pointer"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
-              <span>Chat với Cố vấn AI</span>
+              <MessageSquare className="w-4 h-4 text-blue-600" />
+              <span>Chat sâu hơn với Cố vấn AI</span>
             </button>
 
             {onNavigateToRoadmap && (
@@ -257,11 +361,11 @@ export const AIExplanationModal: React.FC<AIExplanationModalProps> = ({
                   onClose();
                   onNavigateToRoadmap(majorCode);
                 }}
-                className="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs flex items-center justify-center space-x-1.5 transition-colors"
+                className="w-full sm:w-auto px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs sm:text-sm shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer"
               >
-                <MapPin className="w-3.5 h-3.5" />
+                <MapPin className="w-4 h-4" />
                 <span>Tạo lộ trình học tập</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>

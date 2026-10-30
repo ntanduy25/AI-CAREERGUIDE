@@ -51,7 +51,31 @@ FALLBACK_MAJOR_METADATA: dict[str, tuple[str, str, list[str]]] = {
     "7220201": ("Ngôn ngữ Anh", "Nhân văn", ["D01", "D14", "D15"]),
     "7510301": ("Công nghệ kỹ thuật điện, điện tử", "Kỹ thuật", ["A00", "A01"]),
     "7520130": ("Kỹ thuật ô tô", "Kỹ thuật", ["A00", "A01"]),
+    "7140210": ("Sư phạm Tin học", "Khoa học giáo dục và đào tạo giáo viên", ["A00", "A01", "D01"]),
 }
+
+# Automatically load all 108 MOET majors from moet_taxonomy_tt09.json seed if available
+import os
+import json as _pyjson
+for _candidate_path in [
+    os.path.join(os.path.dirname(__file__), "..", "..", "data", "moet_taxonomy_tt09.json"),
+    os.path.join(os.path.dirname(__file__), "..", "..", "db", "seeds", "moet_taxonomy_tt09.json"),
+    os.path.abspath("backend/app/data/moet_taxonomy_tt09.json"),
+]:
+    if os.path.exists(_candidate_path):
+        try:
+            with open(_candidate_path, "r", encoding="utf-8") as _f:
+                _tax_data = _pyjson.load(_f)
+                for _item in _tax_data:
+                    _c = _item.get("major_code")
+                    _n = _item.get("name")
+                    _cat = _item.get("category", "Đào tạo đại học chính quy")
+                    _blk = _item.get("blocks", ["A00", "A01", "D01"])
+                    if _c and _n:
+                        FALLBACK_MAJOR_METADATA[_c] = (_n, _cat, _blk)
+            break
+        except Exception as _e:
+            logger.warning(f"Failed to load seed taxonomy {_candidate_path}: {_e}")
 
 
 def sanitize_pii(text: str) -> str:
@@ -362,13 +386,13 @@ def build_deterministic_ai_explanation(
     # 3. Diagnostic readiness
     if mastered_skills:
         diag_text = (
-            f"Đặc biệt, qua bài kiểm tra chẩn đoán năng lực nhanh (FR03), bạn đã được chứng nhận đạt chuẩn {len(mastered_skills)} kỹ năng "
+            f"Đặc biệt, qua bài kiểm tra chẩn đoán năng lực nền tảng, bạn đã được chứng nhận đạt chuẩn {len(mastered_skills)} kỹ năng "
             f"({', '.join(mastered_skills[:3])}{'...' if len(mastered_skills) > 3 else ''}). "
             f"Các kỹ năng này sẽ tự động được miễn giảm khỏi khoảng trống kiến thức tiên quyết trong lộ trình học tập, giúp bạn rút ngắn thời gian chuẩn bị."
         )
     else:
         diag_text = (
-            "Bạn chưa thực hiện hoặc chưa đạt chuẩn các bài test chẩn đoán năng lực đầu vào (FR03). "
+            "Bạn chưa thực hiện hoặc chưa đạt chuẩn các bài test chẩn đoán năng lực đầu vào. "
             "Bạn có thể làm thêm các bài kiểm tra logic 10 phút để nhận diện chính xác các kỹ năng tiên quyết cần bổ trợ."
         )
 
@@ -484,7 +508,7 @@ async def explain_recommendation_with_ai(
     # 4. Call LLM with strict PII-sanitized prompt (<= 8s timeout)
     try:
         from openai import AsyncOpenAI
-        client_kwargs = {"api_key": settings.OPENAI_API_KEY, "timeout": 25.0}
+        client_kwargs = {"api_key": settings.OPENAI_API_KEY, "timeout": 120.0}
         if settings.OPENAI_BASE_URL:
             client_kwargs["base_url"] = settings.OPENAI_BASE_URL
         client = AsyncOpenAI(**client_kwargs)
@@ -495,27 +519,31 @@ async def explain_recommendation_with_ai(
         diag_lines = ", ".join(mastered_skills) if mastered_skills else "Chưa có kỹ năng kiểm tra đạt chuẩn"
 
         prompt = (
-            f"Bạn là Chuyên gia Cố vấn Hướng nghiệp AI CareerGuide theo chuẩn Thông tư 09/2022/TT-BGDĐT.\n"
+            f"Bạn là Chuyên gia Cố vấn Hướng nghiệp AI CareerGuide hàng đầu. Hãy lập Bản Báo Cáo Giải Trình Định Hướng Ngành Học (Explainable AI - XAI Dossier) chuyên sâu cho học sinh theo chuẩn Thông tư 09/2022/TT-BGDĐT.\n\n"
             f"HỒ SƠ NĂNG LỰC HỌC SINH (DỮ LIỆU ĐÃ ẨN DANH VÀ KHỬ KHUẨN THEO LUẬT 91/2025/QH15):\n"
             f"- Điểm sở thích nghề nghiệp Holland (RIASEC): {riasec_lines}\n"
             f"- Điểm học bạ THPT các môn văn hóa: {grade_lines}\n"
-            f"- Kỹ năng chẩn đoán đầu vào (FR03) đã đạt: {diag_lines}\n\n"
+            f"- Kỹ năng chẩn đoán đầu vào đã đạt: {diag_lines}\n\n"
             f"THÔNG TIN NGÀNH HỌC ĐƯỢC ĐỀ XUẤT:\n"
             f"- Ngành: {major_name} (Mã ngành: {payload.major_code})\n"
             f"- Lĩnh vực: {major_category}\n"
             f"- Tổ hợp môn xét tuyển: {', '.join(admission_blocks)}\n\n"
-            f"RÀNG BUỘC PHÁP LÝ & ĐẠO ĐỨC (Pure Guidance Scope):\n"
-            f"1. Tuyệt đối không đề cập đến họ tên, trường lớp, số điện thoại, email hay thông tin cá nhân của học sinh.\n"
-            f"2. Tuyệt đối không đưa yếu tố học phí hay địa phương vào phân tích.\n"
-            f"3. Viết bài giải trình khách quan, khoa học, dễ hiểu, khích lệ học sinh phát huy thế mạnh.\n\n"
-            f"Hãy trả về JSON đúng định dạng:\n"
+            f"RÀNG BUỘC ĐẠO ĐỨC & NGUYÊN TẮC GIẢI TRÌNH:\n"
+            f"1. Tuyệt đối không đề cập hoặc suy đoán họ tên, trường lớp, thông tin cá nhân học sinh, không nhắc học phí.\n"
+            f"2. BÀI GIẢI TRÌNH (detailed_explanation) phải viết bằng Markdown hấp dẫn, mạch lạc, có chiều sâu (khoảng 150-250 từ), dùng in đậm từ khóa quan trọng, phân tích tường tận vì sao ngành này mở ra tương lai sáng giá và phù hợp nhất với học sinh dựa trên sự giao thoa giữa sở thích cá nhân và năng lực học tập thực tế.\n"
+            f"3. 'riasec_alignment': Phân tích sâu sắc sự tương thích giữa các nhóm Holland nổi bật của học sinh với môi trường đào tạo và tính chất công việc ngành {major_name}.\n"
+            f"4. 'academic_alignment': Phân tích chi tiết điểm số các môn học bạ, đánh giá cơ hội ở các tổ hợp môn ({', '.join(admission_blocks)}) và chỉ ra môn cần củng cố.\n"
+            f"5. 'diagnostic_readiness': Nhận định thực chất về mức độ sẵn sàng kiến thức nền tảng từ kết quả bài test kỹ năng .\n"
+            f"6. 'strengths': 3 điểm mạnh vượt trội, viết rõ ràng, giàu tính khích lệ.\n"
+            f"7. 'recommended_focus_areas': 2 hành động cụ thể, thiết thực để bứt phá học tập.\n\n"
+            f"Hãy trả về đúng định dạng JSON:\n"
             f"{{\n"
-            f'  "detailed_explanation": "Giải thích chi tiết 2-3 đoạn vì sao ngành này phù hợp nhất",\n'
-            f'  "riasec_alignment": "Phân tích cụ thể độ tương đồng sở thích Holland",\n'
-            f'  "academic_alignment": "Phân tích thế mạnh từ điểm học bạ và tổ hợp xét tuyển",\n'
-            f'  "diagnostic_readiness": "Đánh giá mức độ sẵn sàng từ kết quả kiểm tra kỹ năng đầu vào",\n'
-            f'  "strengths": ["Điểm mạnh 1", "Điểm mạnh 2", "Điểm mạnh 3"],\n'
-            f'  "recommended_focus_areas": ["Điểm cần rèn luyện 1", "Điểm cần rèn luyện 2"]\n'
+            f'  "detailed_explanation": "Bài phân tích giải trình chuyên sâu bằng Markdown",\n'
+            f'  "riasec_alignment": "Phân tích sâu sắc độ tương quan sở thích Holland",\n'
+            f'  "academic_alignment": "Phân tích cụ thể học bạ và tổ hợp xét tuyển",\n'
+            f'  "diagnostic_readiness": "Đánh giá mức độ sẵn sàng từ bài test chẩn đoán kỹ năng",\n'
+            f'  "strengths": ["Điểm mạnh nổi bật 1", "Điểm mạnh nổi bật 2", "Điểm mạnh nổi bật 3"],\n'
+            f'  "recommended_focus_areas": ["Kế hoạch hành động 1", "Kế hoạch hành động 2"]\n'
             f"}}"
         )
 
@@ -523,30 +551,57 @@ async def explain_recommendation_with_ai(
 
         async def _call_llm():
             import json
+            import re
             resp = await client.chat.completions.create(
                 model=settings.LLM_MODEL,
                 messages=[
-                    {"role": "system", "content": "Bạn là chuyên gia tư vấn giáo dục đại học khách quan, bảo vệ dữ liệu cá nhân học sinh."},
+                    {"role": "system", "content": "Bạn là chuyên gia tư vấn giáo dục đại học khách quan, bảo vệ dữ liệu cá nhân học sinh. Trả về đúng định dạng JSON yêu cầu."},
                     {"role": "user", "content": sanitized_prompt}
                 ],
                 temperature=0.2,
-                response_format={"type": "json_object"}
+                max_tokens=1800
             )
-            raw_text = resp.choices[0].message.content or "{}"
-            data = json.loads(raw_text)
+            raw_text = (resp.choices[0].message.content or "").strip()
+            # Strip reasoning/thinking tokens (<think>...</think>) if present
+            cleaned_raw = re.sub(r'<think>.*?</think>', '', raw_text, flags=re.DOTALL).strip()
+            data = {}
+            try:
+                data = json.loads(cleaned_raw)
+            except Exception:
+                clean_text = re.sub(r'^```json\s*|\s*```$', '', cleaned_raw, flags=re.MULTILINE).strip()
+                try:
+                    data = json.loads(clean_text)
+                except Exception:
+                    json_match = re.search(r'\{.*\}', cleaned_raw, re.DOTALL)
+                    if json_match:
+                        try:
+                            data = json.loads(json_match.group(0))
+                        except Exception:
+                            pass
+
+            detailed = data.get("detailed_explanation")
+            if not detailed:
+                detailed = raw_text if len(raw_text) > 30 else f"Ngành {major_name} được đề xuất dựa trên sự tương thích cao với năng lực học tập và sở thích của bạn."
+
             return AIExplanationResponse(
                 major_code=payload.major_code,
                 major_name=major_name,
-                detailed_explanation=data.get("detailed_explanation", ""),
-                riasec_alignment=data.get("riasec_alignment", ""),
-                academic_alignment=data.get("academic_alignment", ""),
-                diagnostic_readiness=data.get("diagnostic_readiness", ""),
-                strengths=data.get("strengths", ["Độ tương thích sở thích Holland cao"]),
-                recommended_focus_areas=data.get("recommended_focus_areas", ["Ôn luyện tổ hợp môn xét tuyển"]),
+                detailed_explanation=detailed,
+                riasec_alignment=data.get("riasec_alignment", f"Độ tương thích cao với thiên hướng sở thích Holland RIASEC đối với ngành {major_name}."),
+                academic_alignment=data.get("academic_alignment", f"Điểm số học bạ THPT của bạn đáp ứng tốt yêu cầu đầu vào các tổ hợp xét tuyển ({', '.join(admission_blocks)})."),
+                diagnostic_readiness=data.get("diagnostic_readiness", "Đã đánh giá mức độ sẵn sàng qua các bài kiểm tra chẩn đoán năng lực."),
+                strengths=data.get("strengths") or ["Độ tương thích sở thích Holland cao", "Điểm học bạ các môn nòng cốt đạt yêu cầu"],
+                recommended_focus_areas=data.get("recommended_focus_areas") or ["Ôn luyện tổ hợp môn xét tuyển", "Rèn luyện thêm kỹ năng tư duy logic"],
                 is_ai_generated=True
             )
 
-        return await asyncio.wait_for(_call_llm(), timeout=25.0)
+        try:
+            return await asyncio.wait_for(_call_llm(), timeout=120.0)
+        finally:
+            try:
+                await client.close()
+            except Exception:
+                pass
 
     except Exception as exc:
         logger.warning(f"AI Explanation LLM failed or timed out: {exc}. Using deterministic fallback.")
@@ -569,17 +624,55 @@ def build_deterministic_chat_response(
 ) -> AIChatResponse:
     """
     Deterministic rule-based conversational agent responding to student queries.
-    Activated when AI LLM times out (> 8s) or is not configured.
+    Activated when AI LLM times out (> 8s), encounters quota limits, or is not configured.
     """
     q = query.lower()
 
-    if any(k in q for k in ["tại sao", "vì sao", "lí do", "phù hợp", "tại sao chọn"]):
+    # Smart major resolution from query text or context
+    detected_major_name = major_name
+    detected_major_code = major_code
+    for c_code, meta in FALLBACK_MAJOR_METADATA.items():
+        if meta[0].lower() in q or c_code in q:
+            detected_major_name = meta[0]
+            detected_major_code = c_code
+            break
+
+    if any(k in q for k in ["là gì", "la gi", "như thế nào", "khái niệm", "định nghĩa", "học gì", "đào tạo gì", "nội dung học"]) or (detected_major_name and detected_major_name.lower() in q):
+        m_name = detected_major_name or major_name or "ngành học bạn quan tâm"
+        category_str = ""
+        blocks_str = ""
+        if detected_major_code and detected_major_code in FALLBACK_MAJOR_METADATA:
+            meta = FALLBACK_MAJOR_METADATA[detected_major_code]
+            category_str = f" (thuộc nhóm lĩnh vực *{meta[1]}*)"
+            blocks_joined = ", ".join(meta[2])
+            blocks_str = f"\n- **Tổ hợp môn xét tuyển thường gặp:** {blocks_joined}"
+
+        high_subjs = [k.capitalize() for k, v in grades.items() if isinstance(v, (int, float)) and v >= 8.0]
+        high_str = ""
+        if high_subjs:
+            subjs_joined = ", ".join(high_subjs[:3])
+            high_str = f"\n- **Liên hệ với học bạ của bạn:** Bạn có nền tảng học tập rất tích cực ở các môn {subjs_joined}, tạo tiền đề thuận lợi khi tiếp thu khối kiến thức chuyên ngành."
+
+        reply = (
+            f"### Giới thiệu về ngành **{m_name}**{category_str}\n\n"
+            f"**{m_name}** là ngành đào tạo chuyên môn cung cấp cho người học hệ thống kiến thức toàn diện, tư duy phương pháp luận và kỹ năng thực hành hiện đại, đáp ứng trực tiếp nhu cầu thị trường lao động trong kỷ nguyên số.\n\n"
+            f"- **Chương trình đào tạo:** Trang bị từ kiến thức cơ sở ngành, phương pháp giải quyết vấn đề đến các ứng dụng thực tế và công nghệ mới.\n"
+            f"- **Vị trí việc làm tiêu biểu:** Sinh viên tốt nghiệp có thể đảm nhận các vị trí chuyên môn tại doanh nghiệp, tổ chức giáo dục/công nghệ, cơ quan nghiên cứu hoặc tự phát triển dự án cá nhân.{blocks_str}{high_str}\n\n"
+            f"Bạn muốn tôi phân tích chi tiết hơn về cơ hội nghề nghiệp hay mức độ tương thích của điểm học bạ với ngành **{m_name}**?"
+        )
+        followups = [
+            f"Vì sao em phù hợp với ngành {m_name}?",
+            f"Cơ hội việc làm sau khi tốt nghiệp {m_name} ra sao?",
+            f"Em cần tập trung cải thiện môn học nào cho ngành {m_name}?"
+        ]
+
+    elif any(k in q for k in ["tại sao", "vì sao", "lí do", "phù hợp", "tại sao chọn"]):
         target = f"ngành {major_name}" if major_name else "ngành học được khuyến nghị"
         reply = (
             f"Hệ thống đề xuất {target} dựa trên thuật toán đối sánh 3 trụ cột khách quan:\n\n"
             f"1. **Sở thích Holland (45% trọng số):** Vector tâm lý của bạn tương thích cao với môi trường học tập và tính chất công việc của ngành.\n"
             f"2. **Điểm học bạ THPT (35% trọng số):** Năng lực học tập của bạn ở các môn trọng tâm đạt mức điểm chuẩn hóa vững chắc so với phổ điểm toàn quốc.\n"
-            f"3. **Kỹ năng chẩn đoán đầu vào (FR03):** " + (
+            f"3. **Kỹ năng chẩn đoán đầu vào:** " + (
                 f"Bạn đã đạt chuẩn {len(mastered_skills)} kỹ năng nền tảng ({', '.join(mastered_skills[:2])}), giúp giảm thiểu áp lực ở các môn tiên quyết."
                 if mastered_skills else "Bạn có thể làm thêm bài test 10 phút để xác thực các kỹ năng nền tảng và rút ngắn lộ trình học tập."
             )
@@ -611,7 +704,7 @@ def build_deterministic_chat_response(
     elif any(k in q for k in ["chẩn đoán", "bài test", "kỹ năng", "fr03", "test nhanh"]):
         target = f"ngành {major_name}" if major_name else "lộ trình đại học"
         reply = (
-            f"Bài kiểm tra chẩn đoán năng lực nhanh (FR03) gồm 6 chuyên đề (10-15 phút/bài) về Logic, Toán rời rạc, Giải tích, Tiếng Anh học thuật...\n\n"
+            f"Bài kiểm tra chẩn đoán năng lực nền tảng gồm 6 chuyên đề (10-15 phút/bài) về Logic, Toán rời rạc, Giải tích, Tiếng Anh học thuật...\n\n"
             f"Khi bạn đạt từ 7.0/10 điểm trở lên (≥ 70%), kỹ năng tương ứng sẽ được hệ thống công nhận là **MASTERED**. "
             f"Khi đó, thuật toán LlamaIndex Gap Engine sẽ tự động khấu trừ môn tiên quyết đó khỏi danh sách thiếu hụt, "
             f"giúp lộ trình chuẩn bị cho {target} của bạn ngắn hơn và tập trung thẳng vào kiến thức chuyên ngành nâng cao."
@@ -641,14 +734,14 @@ def build_deterministic_chat_response(
         target = f"ngành {major_name}" if major_name else "chọn ngành đại học"
         reply = (
             f"Chào bạn! Tôi là Cố vấn Hướng nghiệp AI CareerGuide. Tôi đồng hành cùng bạn dựa trên kết quả khảo sát Holland RIASEC, "
-            f"bảng điểm học bạ THPT và các bài kiểm tra chẩn đoán kỹ năng đầu vào (FR03).\n\n"
+            f"bảng điểm học bạ THPT và các bài kiểm tra chẩn đoán kỹ năng đầu vào.\n\n"
             f"Mọi dữ liệu của bạn đều được bảo mật nghiêm ngặt theo Luật 91/2025/QH15. "
             f"Bạn có thắc mắc gì về {target}, tổ hợp môn xét tuyển hay kế hoạch ôn tập kỹ năng không?"
         )
         followups = [
             f"Giải thích chi tiết vì sao em phù hợp với {target}?",
             "Với điểm số hiện tại em nên tập trung học môn gì?",
-            "Làm bài test chẩn đoán kỹ năng nhanh (FR03) có lợi ích gì?"
+            "Làm bài test chẩn đoán kỹ năng nền tảng có lợi ích gì?"
         ]
 
     return AIChatResponse(
@@ -739,7 +832,8 @@ async def chat_with_career_counselor(
     try:
         from openai import AsyncOpenAI
         import json
-        client_kwargs = {"api_key": settings.OPENAI_API_KEY, "timeout": 25.0}
+        import re
+        client_kwargs = {"api_key": settings.OPENAI_API_KEY, "timeout": 120.0}
         if settings.OPENAI_BASE_URL:
             client_kwargs["base_url"] = settings.OPENAI_BASE_URL
         client = AsyncOpenAI(**client_kwargs)
@@ -751,54 +845,140 @@ async def chat_with_career_counselor(
         system_instruction = (
             "Bạn là Cố vấn Hướng nghiệp AI CareerGuide chuyên nghiệp, ân cần, trung thực, hỗ trợ học sinh THPT Việt Nam.\n"
             "QUY TẮC BẢO MẬT DỮ LIỆU CÁ NHÂN (Luật 91/2025/QH15 & Pure Guidance Scope):\n"
-            "1. Dữ liệu học sinh được bảo vệ và khử khuẩn định danh hoàn toàn. Tuyệt đối không đề cập hoặc hỏi tên tuổi, trường lớp, số điện thoại, email.\n"
+            "1. Dữ liệu học sinh được bảo vệ và khử khuẩn định danh hoàn toàn. Tuyệt đối không đề cập hoặc hỏi tên tuổi, trường lớp, số điện thoại, email, địa chỉ.\n"
             "2. Tuyệt đối không đề cập đến học phí hay định kiến vùng miền.\n"
             "3. HỒ SƠ NĂNG LỰC ẨN DANH CỦA HỌC SINH:\n"
             f"   - Sở thích Holland RIASEC: {riasec_summary}\n"
             f"   - Điểm học bạ THPT: {grades_summary}\n"
-            f"   - Kỹ năng chẩn đoán đầu vào (FR03) đã đạt: {mastered_summary}\n"
+            f"   - Kỹ năng chẩn đoán đầu vào đã đạt: {mastered_summary}\n"
             + (f"   - Đang tìm hiểu ngành: {major_name} (Mã ngành: {payload.major_code}, Khối: {', '.join(admission_blocks)})\n" if major_name else "") +
-            "4. Hãy trả lời câu hỏi của học sinh một cách dễ hiểu, có dẫn chứng từ dữ liệu học tập trên, cấu trúc đoạn văn rõ ràng.\n"
-            "5. Cuối phản hồi, hãy đề xuất 3 câu hỏi gợi ý tiếp theo (dạng mảng JSON 'suggested_followups').\n"
-            "Trả về JSON định dạng: {\"reply\": \"...\", \"suggested_followups\": [\"câu 1\", \"câu 2\", \"câu 3\"]}"
+            "4. YÊU CẦU TRẢ LỜI:\n"
+            "   - Hãy trả lời trực tiếp, chính xác, súc tích và giàu giá trị thực tế theo đúng câu hỏi của học sinh (khoảng 150-250 từ).\n"
+            "   - Định dạng câu trả lời bằng Markdown đẹp mắt (gạch đầu dòng, in đậm từ khóa quan trọng).\n"
+            "   - Nếu học sinh hỏi về một ngành (ví dụ: 'sư phạm tin học là gì'), hãy giải thích cặn kẽ ngành đó là gì, học gì, ra trường làm gì và liên hệ thực tế với năng lực/điểm số của học sinh.\n"
+            "5. Đề xuất 3 câu hỏi gợi ý tiếp theo phù hợp với ngữ cảnh cuộc trò chuyện.\n"
+            "Trả về đúng định dạng JSON: {\"reply\": \"Nội dung câu trả lời\", \"suggested_followups\": [\"câu 1\", \"câu 2\", \"câu 3\"]}"
         )
 
-        messages = [{"role": "system", "content": system_instruction}]
-
+        # Build sanitized message chain ensuring valid role alternation:
+        # system -> user -> assistant -> user ...
+        sanitized_history = []
         if payload.history:
-            for h in payload.history[-4:]:  # Keep recent turns
-                clean_content = sanitize_pii(h.content)
-                messages.append({"role": h.role if h.role in ["user", "assistant"] else "user", "content": clean_content})
+            found_first_user = False
+            last_role = None
+            for h in payload.history:
+                role = "assistant" if h.role == "assistant" else "user"
+                content = sanitize_pii(h.content or "").strip()
+                if not content:
+                    continue
+                if not found_first_user:
+                    if role == "user":
+                        found_first_user = True
+                        sanitized_history.append({"role": "user", "content": content})
+                        last_role = "user"
+                else:
+                    if role != last_role:
+                        sanitized_history.append({"role": role, "content": content})
+                        last_role = role
+                    else:
+                        sanitized_history[-1]["content"] += f"\n{content}"
 
-        messages.append({"role": "user", "content": sanitized_user_msg})
+        if sanitized_history and sanitized_history[-1]["role"] == "user":
+            sanitized_history[-1]["content"] += f"\n{sanitized_user_msg}"
+        else:
+            sanitized_history.append({"role": "user", "content": sanitized_user_msg})
+
+        # Keep recent turns (up to 4 turns before user message)
+        if len(sanitized_history) > 5:
+            sanitized_history = sanitized_history[-5:]
+
+        # Guarantee the first message after system is always 'user'
+        if sanitized_history and sanitized_history[0]["role"] != "user":
+            sanitized_history.pop(0)
+
+        messages = [{"role": "system", "content": system_instruction}] + sanitized_history
 
         async def _call_chat():
             resp = await client.chat.completions.create(
                 model=settings.LLM_MODEL,
                 messages=messages,
-                temperature=0.4,
-                response_format={"type": "json_object"}
+                temperature=0.3,
+                max_tokens=2000
             )
-            raw = resp.choices[0].message.content or "{}"
-            data = json.loads(raw)
+            raw = (resp.choices[0].message.content or "").strip()
+            # Strip reasoning/thinking tokens (<think>...</think>) if present
+            cleaned_raw = re.sub(r'<think>.*?</think>', '', raw, flags=re.DOTALL).strip()
+            data = {}
+            reply_text = ""
+            followups = []
+            try:
+                data = json.loads(cleaned_raw)
+                reply_text = data.get("reply", "")
+                followups = data.get("suggested_followups", [])
+            except Exception:
+                clean_json = re.sub(r'^```json\s*|\s*```$', '', cleaned_raw, flags=re.MULTILINE).strip()
+                try:
+                    data = json.loads(clean_json)
+                    reply_text = data.get("reply", "")
+                    followups = data.get("suggested_followups", [])
+                except Exception:
+                    json_match = re.search(r'\{.*\}', cleaned_raw, re.DOTALL)
+                    if json_match:
+                        try:
+                            data = json.loads(json_match.group(0))
+                            reply_text = data.get("reply", "")
+                            followups = data.get("suggested_followups", [])
+                        except Exception:
+                            pass
+                    if not reply_text:
+                        m = re.search(r'"reply"\s*:\s*"(.*?)(?:"\s*,\s*"suggested_followups"|"\s*})', cleaned_raw, re.DOTALL)
+                        if m:
+                            try:
+                                reply_text = m.group(1).encode('utf-8').decode('unicode_escape')
+                            except Exception:
+                                reply_text = m.group(1)
+                        else:
+                            reply_text = clean_json
+
+            if not reply_text:
+                reply_text = raw if raw else f"Chào bạn! Đối với ngành {major_name or 'này'}, hãy đặt câu hỏi để tôi hỗ trợ tư vấn chi tiết hơn."
+
+            if not followups:
+                followups = [
+                    f"Vì sao em phù hợp với ngành {major_name or 'này'}?",
+                    f"Em cần cải thiện môn học nào cho tổ hợp xét tuyển?",
+                    f"Lộ trình học tập chi tiết của ngành gồm những gì?"
+                ]
+
             return AIChatResponse(
-                reply=data.get("reply", "Cảm ơn bạn đã đặt câu hỏi. Hãy tiếp tục khám phá lộ trình học tập của ngành."),
-                suggested_followups=data.get("suggested_followups", [
-                    "Tại sao ngành này phù hợp với em?",
-                    "Em cần cải thiện môn gì cho khối thi?",
-                    "Lộ trình học tập 4 tuần của ngành này?"
-                ]),
+                reply=reply_text,
+                suggested_followups=followups,
                 context_major_code=payload.major_code,
                 is_fallback=False
             )
 
-        return await asyncio.wait_for(_call_chat(), timeout=25.0)
+        try:
+            return await asyncio.wait_for(_call_chat(), timeout=120.0)
+        finally:
+            try:
+                await client.close()
+            except Exception:
+                pass
 
     except Exception as exc:
-        logger.warning(f"AI Chat LLM failed or timed out: {exc}. Using deterministic fallback.")
-        return build_deterministic_chat_response(
+        logger.error(f"AI Chat LLM failed or timed out: {exc}", exc_info=True)
+        resp = build_deterministic_chat_response(
             sanitized_user_msg, major_name, payload.major_code, riasec_scores, grades, mastered_skills
         )
+        err_str = str(exc).lower()
+        if "402" in err_str or "insufficient_quota" in err_str or "payment required" in err_str or "insufficient balance" in err_str:
+            resp.reply = (
+                "> [!NOTE]\n"
+                "> **Thông báo kết nối AI:** Nhà cung cấp API (`api.xah.io`) thông báo **Hết số dư tài khoản (Insufficient balance)**. "
+                "Hệ thống đang tự động giải đáp cho bạn dựa trên **Cơ sở tri thức chuẩn hóa 108 ngành Bộ GD&ĐT & Cây nghề nghiệp Phoenix Ho**.\n\n"
+                + resp.reply
+            )
+        return resp
 
 
 def get_llm_status() -> LLMStatusResponse:
@@ -853,35 +1033,40 @@ async def test_llm_connection(payload: LLMConnectionTestRequest) -> LLMConnectio
     start_time = time.time()
     try:
         from openai import AsyncOpenAI
-        client_kwargs = {"api_key": key, "timeout": 20.0}
+        client_kwargs = {"api_key": key, "timeout": 35.0}
         if base_url:
             client_kwargs["base_url"] = base_url
         client = AsyncOpenAI(**client_kwargs)
 
-        response = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "You are a health probe for AI CareerGuide system. Reply with 'PONG' and nothing else."},
-                {"role": "user", "content": "PING"}
-            ],
-            max_tokens=150,
-            temperature=0.0
-        )
-        latency_ms = round((time.time() - start_time) * 1000, 1)
-        msg = response.choices[0].message
-        reply = (msg.content or getattr(msg, "reasoning_content", None) or "PONG").strip()
+        try:
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "user", "content": "Xin chào, phản hồi ngắn gọn 1 từ: OK"}
+                ],
+                max_tokens=100,
+                temperature=0.0
+            )
+            latency_ms = round((time.time() - start_time) * 1000, 1)
+            msg = response.choices[0].message
+            reply = (msg.content or getattr(msg, "reasoning_content", None) or "PONG").strip()
 
-        return LLMConnectionTestResponse(
-            success=True,
-            status_code=200,
-            latency_ms=latency_ms,
-            model_used=model,
-            base_url=base_url or "https://api.openai.com/v1",
-            is_configured=True,
-            message=f"Kết nối thành công tới mô hình '{model}'. Thời gian phản hồi: {latency_ms}ms.",
-            preview_reply=reply,
-            tested_at=tested_at
-        )
+            return LLMConnectionTestResponse(
+                success=True,
+                status_code=200,
+                latency_ms=latency_ms,
+                model_used=model,
+                base_url=base_url or "https://api.openai.com/v1",
+                is_configured=True,
+                message=f"Kết nối thành công tới mô hình '{model}'. Thời gian phản hồi: {latency_ms}ms.",
+                preview_reply=reply,
+                tested_at=tested_at
+            )
+        finally:
+            try:
+                await client.close()
+            except Exception:
+                pass
     except Exception as e:
         latency_ms = round((time.time() - start_time) * 1000, 1)
         error_msg = str(e)
@@ -890,6 +1075,9 @@ async def test_llm_connection(payload: LLMConnectionTestRequest) -> LLMConnectio
         if "401" in error_msg or "AuthenticationError" in type(e).__name__:
             status_code = 401
             friendly = "Xác thực thất bại (401 Unauthorized): API Key không chính xác, đã hết hạn hoặc không có quyền truy cập."
+        elif "402" in error_msg or "insufficient_quota" in error_msg.lower() or "insufficient balance" in error_msg.lower():
+            status_code = 402
+            friendly = "Hết hạn mức / Số dư tài khoản (402 Insufficient Quota): Tài khoản API trên nhà cung cấp (api.xah.io) đã hết số dư. Vui lòng nạp thêm credit hoặc sử dụng API Key khác."
         elif "404" in error_msg or "NotFoundError" in type(e).__name__:
             status_code = 404
             friendly = f"Mô hình không tồn tại (404 NotFound): Mô hình '{model}' không được endpoint '{base_url or 'api.openai.com'}' hỗ trợ. Hãy kiểm tra lại tên model."

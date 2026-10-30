@@ -167,7 +167,7 @@ export const DiagnosticChecksSection: React.FC<DiagnosticChecksSectionProps> = (
           <div className="space-y-1">
             <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
               <BrainCircuit className="w-3.5 h-3.5 text-blue-600" />
-              <span>FR03: Chuẩn Hóa Điểm & Chẩn Đoán Kỹ Năng Đầu Vào</span>
+              <span>Chuẩn Hóa Điểm & Chẩn Đoán Kỹ Năng Đầu Vào</span>
             </div>
             <h2 className="text-lg font-bold text-slate-900">
               Bài Kiểm Tra Chẩn Đoán Năng Lực Đầu Vào (Optional Diagnostic Checks)

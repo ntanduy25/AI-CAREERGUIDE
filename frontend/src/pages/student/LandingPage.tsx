@@ -56,7 +56,7 @@ export const LandingPage: React.FC = () => {
     },
     {
       step: '3',
-      title: 'Chẩn đoán Năng lực Đầu vào (FR03)',
+      title: 'Chẩn đoán Năng lực Đầu vào',
       desc: 'Kiểm tra nhanh 10 phút kiến thức logic hoặc chuyên ngành để tự động khấu trừ lỗ hổng kỹ năng trong lộ trình học.',
       tag: 'Bổ trợ kỹ năng',
     },
@@ -136,7 +136,7 @@ export const LandingPage: React.FC = () => {
                 <p className="text-xs text-slate-500 mt-0.5">RIASEC + Z-Score + Nhận thức</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">FR03</p>
+                <p className="text-2xl font-bold text-slate-900">10 Phút</p>
                 <p className="text-xs text-slate-500 mt-0.5">Chẩn đoán kỹ năng đầu vào</p>
               </div>
               <div>

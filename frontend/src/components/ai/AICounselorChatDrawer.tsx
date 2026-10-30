@@ -22,6 +22,7 @@ import {
 import { AIChatMessage, AIChatResponse } from '../../types';
 import { aiGuidanceService, diagnosticService } from '../../services/careerServices';
 import { getScopedItem } from '../../utils/userStorage';
+import { AIMarkdownRenderer } from './AIMarkdownRenderer';
 
 interface AICounselorChatDrawerProps {
   isOpen?: boolean;
@@ -37,7 +38,7 @@ interface AICounselorChatDrawerProps {
 
 const INITIAL_WELCOME_MESSAGE = (majorName?: string | null): string => {
   if (majorName) {
-    return `Chào bạn! Tôi là **Cố vấn Hướng nghiệp AI CareerGuide**.\n\nTôi đang xem xét hồ sơ năng lực của bạn đối với ngành **${majorName}**. Dữ liệu đánh giá gồm có:\n- Điểm bài kiểm tra hướng nghiệp RIASEC\n- Điểm học bạ THPT theo tổ hợp môn\n- Kết quả bài test chẩn đoán kỹ năng nhanh (FR03)\n\nBạn có thể hỏi tôi về lý do đề xuất, môn cần cải thiện, hoặc nhấn nút **Tạo lộ trình học** bên dưới nhé!`;
+    return `Chào bạn! Tôi là **Cố vấn Hướng nghiệp AI CareerGuide**.\n\nTôi đang xem xét hồ sơ năng lực của bạn đối với ngành **${majorName}**. Dữ liệu đánh giá gồm có:\n- Điểm bài kiểm tra thiên hướng nghề nghiệp\n- Điểm học bạ THPT các môn trọng điểm\n- Kết quả bài kiểm tra chẩn đoán kỹ năng nền tảng\n\nBạn có thể hỏi tôi về lý do đề xuất, môn cần cải thiện, hoặc nhấn nút **Tạo lộ trình học** bên dưới nhé!`;
   }
   return `Chào bạn! Tôi là **Cố vấn Hướng nghiệp AI CareerGuide**.\n\nTôi sẵn sàng giải đáp thắc mắc về lựa chọn ngành học, giải thích lý do đề xuất, phân tích điểm mạnh - điểm yếu và hỗ trợ bạn xây dựng lộ trình học tập cá nhân hóa.\n\n*Lưu ý: Mọi thông tin định danh cá nhân đều được bảo vệ nghiêm ngặt theo Luật 91/2025/QH15. Hệ thống chỉ xử lý điểm số học tập để đưa ra lời khuyên khách quan.*`;
 };
@@ -50,8 +51,8 @@ const DEFAULT_PROMPTS_WITH_MAJOR = (majorName: string) => [
 ];
 
 const DEFAULT_PROMPTS_GENERAL = [
-  'Dựa vào điểm RIASEC và học bạ của em, ngành nào phù hợp nhất?',
-  'Bài test chẩn đoán kỹ năng đầu vào (FR03) có vai trò gì?',
+  'Dựa vào điểm sở thích và học bạ của em, ngành nào phù hợp nhất?',
+  'Bài kiểm tra chẩn đoán kỹ năng đầu vào có vai trò gì?',
   'Làm thế nào để xây dựng lộ trình tự học hiệu quả?',
   'Ngành STEM và ngành Kinh tế - Xã hội có điểm khác biệt gì?',
 ];
@@ -226,11 +227,26 @@ export const AICounselorChatDrawer: React.FC<AICounselorChatDrawerProps> = ({
 
     const { grades, diagnostics, riasec } = getResolvedInputs();
 
+    // Sanitize conversation history: filter out leading greeting assistant messages
+    const rawSlice = messages.slice(-6);
+    const cleanHistory: AIChatMessage[] = [];
+    let foundFirstUser = false;
+    for (const m of rawSlice) {
+      if (!foundFirstUser) {
+        if (m.role === 'user') {
+          foundFirstUser = true;
+          cleanHistory.push(m);
+        }
+      } else {
+        cleanHistory.push(m);
+      }
+    }
+
     try {
       const response: AIChatResponse = await aiGuidanceService.chatWithCounselor({
         message: text,
         major_code: currentMajorCode || undefined,
-        history: messages.slice(-6), // Send last 6 turns for context
+        history: cleanHistory,
         riasec_scores: riasec,
         grades_by_subject: grades,
         diagnostic_skills_mastered: diagnostics,
@@ -413,38 +429,62 @@ export const AICounselorChatDrawer: React.FC<AICounselorChatDrawerProps> = ({
                   <span>Tuân thủ Luật Bảo vệ Dữ liệu Cá nhân số 91/2025/QH15</span>
                 </div>
                 <p>
-                  Toàn bộ prompt gửi đến AI được lọc sạch hoàn toàn PII. Hệ thống chỉ phân tích các chỉ số học thuật: Vector Holland (R-I-A-S-E-C), điểm số các môn văn hóa THPT và danh sách các kỹ năng đạt trong bài test chẩn đoán logic FR03.
+                  Toàn bộ prompt gửi đến AI được lọc sạch hoàn toàn PII. Hệ thống chỉ phân tích các chỉ số học thuật: Vector sở thích nghề nghiệp, điểm số các môn văn hóa THPT và danh sách các kỹ năng đạt trong bài test chẩn đoán logic.
                 </p>
               </div>
             )}
 
             {/* Messages Scroll Area */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start items-start space-x-2.5'}`}
                 >
+                  {msg.role === 'assistant' && (
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </div>
+                  )}
+
                   <div
-                    className={`max-w-[88%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                    className={`max-w-[88%] sm:max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
                       msg.role === 'user'
-                        ? 'bg-blue-600 text-white rounded-br-xs shadow-xs'
-                        : 'bg-slate-100 text-slate-800 rounded-bl-xs border border-slate-200/80 shadow-2xs'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-tr-xs shadow-xs text-[13px] sm:text-sm'
+                        : 'bg-white text-slate-800 rounded-tl-xs border border-slate-200/90 shadow-2xs'
                     }`}
                   >
-                    <div className="whitespace-pre-line space-y-1">
-                      {msg.content}
-                    </div>
+                    {msg.role === 'assistant' ? (
+                      <div>
+                        <div className="flex items-center space-x-1.5 mb-1.5 pb-1 border-b border-slate-100">
+                          <span className="font-bold text-[11px] text-slate-800">Cố vấn AI CareerGuide</span>
+                          <span className="text-[9px] font-semibold px-1.5 py-0.2 bg-blue-100 text-blue-700 rounded-full">
+                            AI Engine
+                          </span>
+                        </div>
+                        <AIMarkdownRenderer content={msg.content} />
+                      </div>
+                    ) : (
+                      <div className="whitespace-pre-line text-[13px] sm:text-sm">
+                        {msg.content}
+                      </div>
+                    )}
+
                     {msg.created_at && (
                       <div
-                        className={`text-[9px] mt-1.5 text-right ${
-                          msg.role === 'user' ? 'text-blue-100/70' : 'text-slate-400'
+                        className={`text-[9px] mt-2 flex items-center justify-end space-x-1 ${
+                          msg.role === 'user' ? 'text-blue-100/75' : 'text-slate-400'
                         }`}
                       >
-                        {new Date(msg.created_at).toLocaleTimeString('vi-VN', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        <span>
+                          {new Date(msg.created_at).toLocaleTimeString('vi-VN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        {msg.role === 'assistant' && (
+                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-500" />
+                        )}
                       </div>
                     )}
                   </div>
@@ -452,10 +492,13 @@ export const AICounselorChatDrawer: React.FC<AICounselorChatDrawerProps> = ({
               ))}
 
               {isSending && (
-                <div className="flex justify-start">
-                  <div className="bg-slate-100 text-slate-600 rounded-2xl rounded-bl-xs px-4 py-2.5 border border-slate-200 flex items-center space-x-2 text-xs">
+                <div className="flex justify-start items-start space-x-2.5 animate-pulse">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                  </div>
+                  <div className="bg-white text-slate-700 rounded-2xl rounded-tl-xs px-4 py-3 border border-blue-200/80 shadow-2xs flex items-center space-x-2 text-xs">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                    <span>Cố vấn AI đang suy luận...</span>
+                    <span className="font-medium text-slate-700">Cố vấn AI đang phân tích dữ liệu và suy luận...</span>
                   </div>
                 </div>
               )}

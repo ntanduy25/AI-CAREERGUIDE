@@ -139,9 +139,9 @@ export const RecommendationPage: React.FC = () => {
 
   // 3-pillar breakdown chart data
   const pillarData = selectedMajor ? [
-    { pillar: 'RIASEC (45%)', score: selectedMajor.riasec_score, weighted: Number((selectedMajor.riasec_score * 0.45).toFixed(1)) },
+    { pillar: 'Sở thích', score: selectedMajor.riasec_score, weighted: Number((selectedMajor.riasec_score * 0.45).toFixed(1)) },
     { pillar: 'Học thuật (35%)', score: selectedMajor.academic_score, weighted: Number((selectedMajor.academic_score * 0.35).toFixed(1)) },
-    { pillar: 'Nhận thức (20%)', score: selectedMajor.preference_score, weighted: Number((selectedMajor.preference_score * 0.20).toFixed(1)) },
+    { pillar: 'Nhận thức', score: selectedMajor.preference_score, weighted: Number((selectedMajor.preference_score * 0.20).toFixed(1)) },
   ] : [];
 
   return (
@@ -157,7 +157,7 @@ export const RecommendationPage: React.FC = () => {
               Bảng Điều Khiển Gợi Ý Ngành Học Giải Thích Được (XAI Dashboard)
             </h1>
             <p className="text-xs text-slate-500">
-              Điểm số tương thích 100% tất định được tính toán từ 3 trụ cột khoa học (Bảng 6 & NFR04)
+              Điểm số tương thích 100% tất định được tính toán từ 3 trụ cột khoa học (Sở thích, Học bạ, Nhận thức)
             </p>
           </div>
         </div>
@@ -226,15 +226,15 @@ export const RecommendationPage: React.FC = () => {
                   {/* 3 mini progress pills */}
                   <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100/80 text-[10px]">
                     <div className="text-center bg-white p-1 rounded-lg border border-slate-100">
-                      <span className="text-slate-400 block font-medium">RIASEC (45%)</span>
+                      <span className="text-slate-400 block font-medium">Sở thích</span>
                       <span className="font-bold text-slate-700">{major.riasec_score}%</span>
                     </div>
                     <div className="text-center bg-white p-1 rounded-lg border border-slate-100">
-                      <span className="text-slate-400 block font-medium">Học lực (35%)</span>
+                      <span className="text-slate-400 block font-medium">Học bạ</span>
                       <span className="font-bold text-slate-700">{major.academic_score}%</span>
                     </div>
                     <div className="text-center bg-white p-1 rounded-lg border border-slate-100">
-                      <span className="text-slate-400 block font-medium">Nhận thức (20%)</span>
+                      <span className="text-slate-400 block font-medium">Nhận thức</span>
                       <span className="font-bold text-slate-700">{major.preference_score}%</span>
                     </div>
                   </div>
@@ -262,7 +262,7 @@ export const RecommendationPage: React.FC = () => {
                   {selectedMajor.major_name}
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Tổ hợp môn xét tuyển: {selectedMajor.admitted_blocks.join(', ')}
+                  Lĩnh vực đào tạo: {selectedMajor.category_name}
                 </p>
               </div>
 

@@ -176,7 +176,7 @@ export const GuidanceHubPage: React.FC = () => {
     navigate(`/guidance?tab=${newTab}`, { replace: true });
   };
 
-  // Diagnostic Skill Checks (FR03)
+  // Diagnostic Skill Checks
   const [diagnosticResults, setDiagnosticResults] = useState(() => diagnosticService.getTestResults(userId));
 
   useEffect(() => {
@@ -217,6 +217,7 @@ export const GuidanceHubPage: React.FC = () => {
 
   // Internal assessment step: 0-5 (RIASEC R,I,A,S,E,C), 6 (Cognitive), 7 (Review / Completed Summary)
   const [assessmentStep, setAssessmentStep] = useState<number>(0);
+  const [questionDetailCode, setQuestionDetailCode] = useState<string | null>(null);
   const [presetNotice, setPresetNotice] = useState<string | null>(null);
 
   // =========================================================================
@@ -669,7 +670,7 @@ export const GuidanceHubPage: React.FC = () => {
             </div>
           </button>
 
-          {/* Tab 3: Diagnostic Skill Checks (FR03) */}
+          {/* Tab 3: Diagnostic Skill Checks */}
           <button
             type="button"
             onClick={() => handleTabChange('diagnostic')}
@@ -809,8 +810,7 @@ export const GuidanceHubPage: React.FC = () => {
                         : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <span>Nhóm {g.dimension}</span>
-                    <span className="hidden md:inline font-normal text-slate-400">({g.name_vi.split(' ')[0]})</span>
+                    <span>{g.name_vi}</span>
                     {isGroupDone && <Check className="w-3 h-3 text-emerald-600" />}
                   </button>
                 );
@@ -874,15 +874,39 @@ export const GuidanceHubPage: React.FC = () => {
                         <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
                           <IconComp className="w-4 h-4" />
                         </div>
-                        <div className="flex-1 space-y-0.5">
-                          {q.domain_tag && (
-                            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                              {q.domain_tag}
-                            </span>
-                          )}
+                        <div className="flex-1">
                           <p className="text-xs sm:text-sm font-semibold text-slate-900 leading-snug">{q.question_text}</p>
                         </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setQuestionDetailCode(questionDetailCode === q.code ? null : q.code)}
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                            questionDetailCode === q.code
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-700 border border-slate-200'
+                          }`}
+                          title="Bấm để xem chi tiết lý thuyết câu hỏi"
+                        >
+                          !
+                        </button>
                       </div>
+
+                      {questionDetailCode === q.code && (
+                        <div className="p-3 bg-slate-50 rounded-lg border border-blue-200 text-xs text-slate-700 space-y-1.5 animate-in fade-in duration-150">
+                          <div className="flex items-center justify-between text-blue-900 font-bold">
+                            <span>Chi tiết câu hỏi lý thuyết:</span>
+                            <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                              Mã Holland: {q.code}
+                            </span>
+                          </div>
+                          <div className="text-[11.5px] text-slate-600 space-y-1">
+                            <div><strong>Nhóm định hướng:</strong> {currentGroupMeta.name_vi} ({currentGroupMeta.name_en})</div>
+                            {q.domain_tag && <div><strong>Lĩnh vực khảo sát:</strong> {q.domain_tag}</div>}
+                            <p className="text-[11px] text-slate-500 italic">Đo lường mức độ tương thích đối với môi trường và tác vụ thuộc nhóm {currentGroupMeta.name_vi}.</p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Likert Scale 1 - 5 */}
                       <div className="grid grid-cols-5 gap-2 max-w-xl mx-auto">
@@ -957,10 +981,36 @@ export const GuidanceHubPage: React.FC = () => {
 
                   return (
                     <div key={q.code} className="p-4 rounded-md border border-slate-200 bg-slate-50/40 space-y-2.5">
-                      <div className="space-y-0.5">
-                        <h3 className="text-xs font-bold text-slate-900">{q.question_text || q.title}</h3>
-                        {q.subtitle && <p className="text-[11px] text-slate-500">{q.subtitle}</p>}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-0.5 flex-1">
+                          <h3 className="text-xs font-bold text-slate-900">{q.question_text || q.title}</h3>
+                          {q.subtitle && <p className="text-[11px] text-slate-500">{q.subtitle}</p>}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setQuestionDetailCode(questionDetailCode === q.code ? null : q.code)}
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                            questionDetailCode === q.code
+                              ? 'bg-purple-600 text-white shadow-xs'
+                              : 'bg-slate-100 hover:bg-purple-50 text-slate-500 hover:text-purple-700 border border-slate-200'
+                          }`}
+                          title="Bấm để xem chi tiết lý thuyết"
+                        >
+                          !
+                        </button>
                       </div>
+
+                      {questionDetailCode === q.code && (
+                        <div className="p-3 bg-purple-50/50 rounded-lg border border-purple-200 text-xs text-slate-700 space-y-1 animate-in fade-in duration-150">
+                          <div className="flex items-center justify-between text-purple-900 font-bold">
+                            <span>Chi tiết câu hỏi nhận thức:</span>
+                            <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+                              Mã: {q.code}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-600">Đánh giá sở thích tương tác, phong cách học tập và phương pháp giải quyết vấn đề.</p>
+                        </div>
+                      )}
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                         {q.options?.map(opt => {
@@ -1453,12 +1503,12 @@ export const GuidanceHubPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Card 3: Diagnostic Skill Checks (FR03) */}
+              {/* Card 3: Diagnostic Skill Checks */}
               <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                   <div className="flex items-center space-x-2">
                     <Sparkles className="w-4 h-4 text-purple-600" />
-                    <span className="text-xs font-bold text-slate-900">3. Chẩn đoán năng lực đầu vào (FR03)</span>
+                    <span className="text-xs font-bold text-slate-900">3. Chẩn đoán năng lực đầu vào</span>
                   </div>
 
                   {passedDiagnosticCount > 0 ? (
@@ -1782,13 +1832,7 @@ export const GuidanceHubPage: React.FC = () => {
                               <div>Nhận thức: <strong className="text-slate-900">{rec.preference_score}%</strong></div>
                             </div>
 
-                            {/* Admission Blocks */}
-                            <div className="text-[11px] text-slate-600 flex items-center justify-between">
-                              <span>Tổ hợp môn:</span>
-                              <strong className="font-mono text-slate-900">
-                                {rec.admitted_blocks.slice(0, 3).join(', ')}
-                              </strong>
-                            </div>
+
 
                             {/* Skill Gap */}
                             {rec.missing_skills.length > 0 && (
@@ -1880,7 +1924,7 @@ export const GuidanceHubPage: React.FC = () => {
                           <div className="space-y-1">
                             <div className="flex items-center justify-between">
                               <h4 className="text-xs font-semibold text-slate-800 uppercase tracking-wider">
-                                Đối chiếu Vector Holland RIASEC:
+                                Đối chiếu Thiên hướng Nghề nghiệp:
                               </h4>
                               <span className="text-[10px] text-slate-500">
                                 Xanh: Bạn | Đỏ: Chuẩn Ngành
