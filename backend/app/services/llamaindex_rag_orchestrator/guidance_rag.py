@@ -1105,3 +1105,12 @@ async def test_llm_connection(payload: LLMConnectionTestRequest) -> LLMConnectio
             tested_at=tested_at
         )
 
+def update_llm_config(model: str = None, base_url: str = None, api_key: str = None) -> LLMStatusResponse:
+    """Dynamically updates active LLM configuration in memory and returns new status."""
+    if model and model.strip():
+        settings.LLM_MODEL = model.strip()
+    if base_url and base_url.strip():
+        settings.OPENAI_BASE_URL = base_url.strip()
+    if api_key and api_key.strip():
+        settings.OPENAI_API_KEY = api_key.strip()
+    return get_llm_status()

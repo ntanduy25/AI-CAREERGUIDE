@@ -22,6 +22,7 @@ import {
   EyeOff,
   Loader2,
   SlidersHorizontal,
+  Save,
 } from 'lucide-react';
 import { taxonomyService, adminService, aiGuidanceService } from '../../services/careerServices';
 import { MajorItem } from '../../data/defaultTaxonomy';
@@ -42,11 +43,18 @@ export const AdminDashboardPage: React.FC = () => {
   const [customBaseUrl, setCustomBaseUrl] = useState('https://api.xah.io/v1');
   const [customModel, setCustomModel] = useState('dungcsnd113/deepseek-v4.1-flash-1017-free');
   const [showKeyText, setShowKeyText] = useState(false);
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [configSaveSuccess, setConfigSaveSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     updateCounts();
     const handleUpdate = () => updateCounts();
     window.addEventListener('careerguide_taxonomy_updated', handleUpdate);
+
+    const stored = aiGuidanceService.getStoredLLMConfig();
+    if (stored.api_key) setCustomKey(stored.api_key);
+    if (stored.base_url) setCustomBaseUrl(stored.base_url);
+    if (stored.model) setCustomModel(stored.model);
 
     aiGuidanceService.getLLMStatus().then(st => {
       setLlmStatus(st);
@@ -87,6 +95,25 @@ export const AdminDashboardPage: React.FC = () => {
       });
     } finally {
       setIsTestingConnection(false);
+    }
+  };
+
+  const handleSaveConfig = async () => {
+    setIsSavingConfig(true);
+    setConfigSaveSuccess(null);
+    try {
+      const res = await aiGuidanceService.updateLLMConfig({
+        model: customModel,
+        base_url: customBaseUrl,
+        api_key: customKey,
+      });
+      setLlmStatus(res);
+      setConfigSaveSuccess('Đã lưu cấu hình Model, API Key và Base URL thành công vào hệ thống!');
+      setTimeout(() => setConfigSaveSuccess(null), 5000);
+    } catch (e: any) {
+      alert('Không thể lưu cấu hình: ' + (e?.message || 'Lỗi không xác định'));
+    } finally {
+      setIsSavingConfig(false);
     }
   };
 
@@ -436,19 +463,40 @@ export const AdminDashboardPage: React.FC = () => {
               ))}
             </div>
 
-            <div className="pt-2 flex justify-end">
+            {configSaveSuccess && (
+              <div className="p-2.5 rounded-md bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{configSaveSuccess}</span>
+              </div>
+            )}
+
+            <div className="pt-2 flex items-center justify-between flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => handleTestConnection(true)}
                 disabled={isTestingConnection}
-                className="px-4 py-1.5 rounded-md bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-800 disabled:text-slate-500 text-white font-semibold text-xs shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed"
+                className="px-3.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 disabled:text-slate-600 text-slate-200 font-semibold text-xs border border-slate-700 transition-colors flex items-center space-x-1.5 cursor-pointer disabled:cursor-not-allowed"
               >
                 {isTestingConnection ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <Zap className="w-3.5 h-3.5 text-amber-300" />
                 )}
-                <span>Thực hiện Probe Test với thông số này</span>
+                <span>Thử nghiệm kết nối (Probe Test)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveConfig}
+                disabled={isSavingConfig}
+                className="px-4 py-1.5 rounded-md bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-sm transition-all flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isSavingConfig ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                <span>Lưu cấu hình Model & API Key này</span>
               </button>
             </div>
           </div>

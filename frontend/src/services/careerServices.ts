@@ -1839,15 +1839,67 @@ export const aiGuidanceService = {
     }
   },
 
-  async getLLMStatus(): Promise<LLMStatusResponse> {
+  getStoredLLMConfig(): { model: string; base_url: string; api_key: string } {
     try {
-      return await apiRequest('/rag-governance/llm-status');
-    } catch {
+      const stored = localStorage.getItem('careerguide_admin_llm_config');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch {}
+    return {
+      model: 'dungcsnd113/deepseek-v4.1-flash-1017-free',
+      base_url: 'https://api.xah.io/v1',
+      api_key: 'sk-a815b0e27c1adee4187ece565b2dba27477c60acacd3b80f625de0ab7b570ef1',
+    };
+  },
+
+  async getLLMStatus(): Promise<LLMStatusResponse> {
+    const localCfg = this.getStoredLLMConfig();
+    try {
+      const res = await apiRequest<LLMStatusResponse>('/rag-governance/llm-status');
       return {
-        model: 'dungcsnd113/deepseek-v4.1-flash-1017-free',
-        base_url: 'https://api.xah.io/v1',
-        is_key_configured: false,
-        masked_key: null,
+        ...res,
+        model: localCfg.model || res.model,
+        base_url: localCfg.base_url || res.base_url,
+      };
+    } catch {
+      const key = localCfg.api_key;
+      const masked = key && key.length > 8 ? `${key.slice(0, 4)}...${key.slice(-4)}` : (key ? '****' : null);
+      return {
+        model: localCfg.model,
+        base_url: localCfg.base_url,
+        is_key_configured: Boolean(key),
+        masked_key: masked,
+        embedding_model: 'text-embedding-3-small',
+      };
+    }
+  },
+
+  async updateLLMConfig(params: { model?: string; base_url?: string; api_key?: string }): Promise<LLMStatusResponse> {
+    const current = this.getStoredLLMConfig();
+    const updated = {
+      model: params.model !== undefined ? params.model.trim() : current.model,
+      base_url: params.base_url !== undefined ? params.base_url.trim() : current.base_url,
+      api_key: params.api_key !== undefined ? params.api_key.trim() : current.api_key,
+    };
+    try {
+      localStorage.setItem('careerguide_admin_llm_config', JSON.stringify(updated));
+    } catch {}
+
+    try {
+      return await apiRequest<LLMStatusResponse>('/rag-governance/update-llm-config', {
+        method: 'POST',
+        body: JSON.stringify(updated),
+      });
+    } catch (err) {
+      console.warn('[aiGuidanceService] Backend not reachable for config update, saved to local client storage:', err);
+      const key = updated.api_key;
+      const masked = key && key.length > 8 ? `${key.slice(0, 4)}...${key.slice(-4)}` : (key ? '****' : null);
+      return {
+        model: updated.model,
+        base_url: updated.base_url,
+        is_key_configured: Boolean(key),
+        masked_key: masked,
         embedding_model: 'text-embedding-3-small',
       };
     }

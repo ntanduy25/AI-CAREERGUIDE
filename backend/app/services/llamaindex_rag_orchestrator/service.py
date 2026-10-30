@@ -42,6 +42,7 @@ from app.services.llamaindex_rag_orchestrator.guidance_rag import (
     chat_with_career_counselor,
     get_llm_status,
     test_llm_connection,
+    update_llm_config,
 )
 
 

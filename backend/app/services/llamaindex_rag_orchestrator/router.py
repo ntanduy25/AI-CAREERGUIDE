@@ -27,6 +27,7 @@ from app.schemas.rag import (
     LLMConnectionTestRequest,
     LLMConnectionTestResponse,
     LLMStatusResponse,
+    LLMConfigUpdateRequest,
 )
 from app.services.llamaindex_rag_orchestrator import service
 
@@ -226,3 +227,19 @@ async def test_llm_api_connection(
     request_data = payload or LLMConnectionTestRequest()
     return await service.test_llm_connection(request_data)
 
+@router.post("/update-llm-config", response_model=LLMStatusResponse)
+async def update_system_llm_config(
+    payload: LLMConfigUpdateRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Allows Admin to dynamically update the active LLM Model, Base URL, and API Key."""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ Quản trị viên (ADMIN) mới có quyền cập nhật cấu hình mô hình AI.",
+        )
+    return service.update_llm_config(
+        model=payload.model,
+        base_url=payload.base_url,
+        api_key=payload.api_key,
+    )

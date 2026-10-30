@@ -141,3 +141,7 @@ class LLMStatusResponse(BaseModel):
     masked_key: Optional[str] = None
     embedding_model: str
 
+class LLMConfigUpdateRequest(BaseModel):
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+    model: Optional[str] = None

@@ -435,3 +435,8 @@ export interface LLMStatusResponse {
   embedding_model: string;
 }
 
+export interface LLMConfigUpdateRequest {
+  model?: string;
+  base_url?: string;
+  api_key?: string;
+}
