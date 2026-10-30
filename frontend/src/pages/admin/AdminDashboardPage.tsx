@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { taxonomyService, adminService, aiGuidanceService } from '../../services/careerServices';
 import { MajorItem } from '../../data/defaultTaxonomy';
-import { LLMStatusResponse, LLMConnectionTestResponse } from '../../types';
+import { LLMStatusResponse, LLMConnectionTestResponse, LLMConnectionTestRequest } from '../../types';
 
 export const AdminDashboardPage: React.FC = () => {
   const [majorsCount, setMajorsCount] = useState(0);
@@ -69,13 +69,16 @@ export const AdminDashboardPage: React.FC = () => {
     setIsTestingConnection(true);
     setConnectionResult(null);
 
-    const payload = useCustom
-      ? {
-          api_key: customKey.trim() || undefined,
-          base_url: customBaseUrl.trim() || undefined,
-          model: customModel.trim() || undefined,
-        }
-      : undefined;
+    // Always send the active model, base_url, and API key so the backend tests the exact configured model
+    const targetModel = (useCustom ? customModel : (llmStatus?.model || customModel))?.trim() || 'dungcsnd113/deepseek-v4.1-flash-1017-free';
+    const targetBaseUrl = (useCustom ? customBaseUrl : (llmStatus?.base_url || customBaseUrl))?.trim() || 'https://api.xah.io/v1';
+    const targetKey = (useCustom ? customKey : (customKey || undefined))?.trim();
+
+    const payload: LLMConnectionTestRequest = {
+      model: targetModel,
+      base_url: targetBaseUrl,
+      api_key: targetKey || undefined,
+    };
 
     try {
       const res = await aiGuidanceService.testLLMConnection(payload);
@@ -86,9 +89,9 @@ export const AdminDashboardPage: React.FC = () => {
         success: false,
         status_code: 500,
         latency_ms: 0,
-        model_used: customModel || 'dungcsnd113/deepseek-v4.1-flash-1017-free',
-        base_url: customBaseUrl || 'https://api.xah.io/v1',
-        is_configured: false,
+        model_used: targetModel,
+        base_url: targetBaseUrl,
+        is_configured: Boolean(targetKey),
         message: e?.message || 'Lỗi khi gửi yêu cầu kiểm tra tới máy chủ.',
         preview_reply: null,
         tested_at: new Date().toISOString(),

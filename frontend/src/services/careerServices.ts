@@ -1946,19 +1946,30 @@ export const aiGuidanceService = {
   },
 
   async testLLMConnection(params?: LLMConnectionTestRequest): Promise<LLMConnectionTestResponse> {
+    const localCfg = this.getStoredLLMConfig();
+    const effectiveModel = params?.model || localCfg.model || 'dungcsnd113/deepseek-v4.1-flash-1017-free';
+    const effectiveBaseUrl = params?.base_url || localCfg.base_url || 'https://api.xah.io/v1';
+    const effectiveKey = params?.api_key !== undefined ? params.api_key : localCfg.api_key;
+
+    const payload: LLMConnectionTestRequest = {
+      model: effectiveModel,
+      base_url: effectiveBaseUrl,
+      api_key: effectiveKey,
+    };
+
     try {
       return await apiRequest('/rag-governance/test-llm-connection', {
         method: 'POST',
-        body: JSON.stringify(params || {}),
+        body: JSON.stringify(payload),
       });
     } catch (err: any) {
       return {
         success: false,
         status_code: err.status || 500,
         latency_ms: 0,
-        model_used: params?.model || 'dungcsnd113/deepseek-v4.1-flash-1017-free',
-        base_url: params?.base_url || 'https://api.xah.io/v1',
-        is_configured: !!params?.api_key,
+        model_used: effectiveModel,
+        base_url: effectiveBaseUrl,
+        is_configured: Boolean(effectiveKey),
         message: err.message || 'Không thể kết nối đến máy chủ backend để kiểm tra.',
         preview_reply: null,
         tested_at: new Date().toISOString(),
