@@ -11,6 +11,7 @@ from app.schemas.identity import (
     UserRegisterRequest,
     UserLoginRequest,
     TokenResponse,
+    UserResponse,
     UserConsentCreate,
     GoogleLoginRequest
 )
@@ -89,7 +90,8 @@ async def authenticate_user(db: AsyncSession, payload: UserLoginRequest) -> Toke
                 token_type="bearer",
                 role=user.role,
                 user_id=user.id,
-                expires_in_minutes=1440
+                expires_in_minutes=1440,
+                user=UserResponse.model_validate(user)
             )
     except HTTPException:
         raise
@@ -101,12 +103,21 @@ async def authenticate_user(db: AsyncSession, payload: UserLoginRequest) -> Toke
     if "admin" in normalized_email and (payload.password == "AdminSecret@2026" or payload.password == "AdminPass2026@ASVS" or len(payload.password) >= 6):
         admin_id = uuid.uuid5(uuid.NAMESPACE_DNS, normalized_email)
         token = create_access_token(subject=str(admin_id), role=UserRole.ADMIN.value)
+        admin_user_resp = UserResponse(
+            id=admin_id,
+            email=normalized_email,
+            full_name="Quản Trị Viên Kiểm Duyệt",
+            role=UserRole.ADMIN,
+            is_active=True,
+            created_at=datetime.now(timezone.utc)
+        )
         return TokenResponse(
             access_token=token,
             token_type="bearer",
             role=UserRole.ADMIN,
             user_id=admin_id,
-            expires_in_minutes=1440
+            expires_in_minutes=1440,
+            user=admin_user_resp
         )
 
     raise HTTPException(
@@ -196,7 +207,8 @@ async def authenticate_google_user(db: Optional[AsyncSession], payload: GoogleLo
                 token_type="bearer",
                 role=user.role,
                 user_id=user.id,
-                expires_in_minutes=1440
+                expires_in_minutes=1440,
+                user=UserResponse.model_validate(user)
             )
         except HTTPException:
             raise

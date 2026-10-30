@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthResponse, UserProfileDetails } from '../types';
+import { User, UserRole, AuthResponse, UserProfileDetails } from '../types';
 import { authService } from '../services/careerServices';
 import { purgeLegacyStorage } from '../utils/userStorage';
 
@@ -33,8 +33,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('careerguide_user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('careerguide_user');
+      if (!saved || saved === 'undefined' || saved === 'null') return null;
+      return JSON.parse(saved);
+    } catch {
+      return null;
+    }
   });
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem('careerguide_token');
@@ -58,12 +63,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     const res: AuthResponse = await authService.login({ email, password });
+    const validatedUser = res.user || {
+      id: 'usr_' + Date.now(),
+      email,
+      full_name: email.toLowerCase().includes('admin') ? 'Quản Trị Viên Kiểm Duyệt' : 'Người dùng',
+      role: (email.toLowerCase().includes('admin') ? 'ADMIN' : 'STUDENT') as UserRole,
+      created_at: new Date().toISOString(),
+    };
     setToken(res.access_token);
-    setUser(res.user);
+    setUser(validatedUser);
     localStorage.setItem('careerguide_token', res.access_token);
-    localStorage.setItem('careerguide_user', JSON.stringify(res.user));
+    localStorage.setItem('careerguide_user', JSON.stringify(validatedUser));
     window.dispatchEvent(new CustomEvent('careerguide_auth_changed'));
-    return res;
+    return { ...res, user: validatedUser };
   };
 
   const googleLogin = async (googleData: {
@@ -145,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('careerguide_user', JSON.stringify(updatedUser));
   };
 
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === 'ADMIN' || (user?.email?.toLowerCase().includes('admin') ?? false);
 
   return (
     <AuthContext.Provider

@@ -595,7 +595,8 @@ class TestAIExplanationAndChatCounselor:
     def test_llm_status_reports_model_and_masked_key(self):
         from app.services.llamaindex_rag_orchestrator.guidance_rag import get_llm_status
         status_info = get_llm_status()
-        assert status_info.model == "deepseek-4.1-flash-ckey"
+        from app.core.config import settings
+        assert status_info.model == settings.LLM_MODEL
         assert status_info.embedding_model == "text-embedding-3-small"
         assert isinstance(status_info.is_key_configured, bool)
 

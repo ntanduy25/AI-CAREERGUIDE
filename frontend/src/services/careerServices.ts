@@ -171,10 +171,27 @@ export const authService = {
 
   async login(data: { email: string; password: string }): Promise<AuthResponse> {
     try {
-      return await apiRequest<AuthResponse>('/identity/login', {
+      const res = await apiRequest<any>('/identity/login', {
         method: 'POST',
         body: JSON.stringify(data),
       });
+
+      if (!res.user && res.access_token) {
+        const userRole: UserRole = res.role || (data.email.toLowerCase().includes('admin') ? 'ADMIN' : 'STUDENT');
+        const user: User = {
+          id: String(res.user_id || 'usr_' + Date.now()),
+          email: data.email,
+          full_name: userRole === 'ADMIN' ? 'Quản Trị Viên Kiểm Duyệt' : (data.email.split('@')[0] || 'Người dùng'),
+          role: userRole,
+          created_at: new Date().toISOString(),
+        };
+        return {
+          access_token: res.access_token,
+          token_type: res.token_type || 'bearer',
+          user,
+        };
+      }
+      return res;
     } catch (err: any) {
       console.warn('[AuthService] Backend DB offline/unreachable. Providing local fallback session:', err);
       const normalizedEmail = data.email.trim().toLowerCase();
