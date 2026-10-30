@@ -63,3 +63,7 @@ class GoogleLoginRequest(BaseModel):
     credential: Optional[str] = None
     google_id: Optional[str] = None
     avatar_url: Optional[str] = None
+
+class GoogleOAuthCallbackRequest(BaseModel):
+    code: str
+    redirect_uri: Optional[str] = None

@@ -17,6 +17,7 @@ interface AuthContextType {
     google_id?: string;
     avatar_url?: string;
   }) => Promise<AuthResponse>;
+  handleGoogleCallback: (code: string, redirectUri?: string) => Promise<AuthResponse>;
   logout: () => void;
   consentGranted: boolean;
   grantConsent: () => Promise<void>;
@@ -73,6 +74,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     avatar_url?: string;
   }) => {
     const res: AuthResponse = await authService.googleLogin(googleData);
+    setToken(res.access_token);
+    setUser(res.user);
+    localStorage.setItem('careerguide_token', res.access_token);
+    localStorage.setItem('careerguide_user', JSON.stringify(res.user));
+    window.dispatchEvent(new CustomEvent('careerguide_auth_changed'));
+    return res;
+  };
+
+  const handleGoogleCallback = async (code: string, redirectUri?: string) => {
+    const res: AuthResponse = await authService.handleGoogleCallback(code, redirectUri);
     setToken(res.access_token);
     setUser(res.user);
     localStorage.setItem('careerguide_token', res.access_token);
@@ -146,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         googleLogin,
+        handleGoogleCallback,
         logout,
         consentGranted,
         grantConsent,

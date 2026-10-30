@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     ARGON2_HASH_LEN: int = 32
     ARGON2_SALT_LEN: int = 16
 
+    # Google OAuth 2.0 Credentials
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:5173/login/callback"
+
     # AI & Embedding Services
     OPENAI_API_KEY: str = ""
     OPENAI_BASE_URL: str = "https://api.xah.io/v1"

@@ -88,6 +88,29 @@ export const authService = {
     }
   },
 
+  async handleGoogleCallback(code: string, redirectUri?: string): Promise<AuthResponse> {
+    const res = await apiRequest<{
+      access_token: string;
+      token_type: string;
+      role: UserRole;
+      user_id: string;
+    }>('/identity/google/callback', {
+      method: 'POST',
+      body: JSON.stringify({ code, redirect_uri: redirectUri }),
+    });
+
+    // Fetch user profile using returned JWT token
+    const profile = await apiRequest<User>('/identity/me', {
+      headers: { Authorization: `Bearer ${res.access_token}` },
+    });
+
+    return {
+      access_token: res.access_token,
+      token_type: res.token_type,
+      user: profile,
+    };
+  },
+
   async googleLogin(data: {
     email: string;
     full_name?: string;

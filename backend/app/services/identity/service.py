@@ -214,3 +214,80 @@ async def authenticate_google_user(db: Optional[AsyncSession], payload: GoogleLo
         user_id=mock_id,
         expires_in_minutes=1440
     )
+
+async def handle_google_oauth_callback(
+    db: Optional[AsyncSession],
+    code: str,
+    redirect_uri: Optional[str] = None
+) -> TokenResponse:
+    """
+    Exchanges Google authorization code for tokens, retrieves real Google user profile,
+    and registers or signs in the user.
+    """
+    import httpx
+
+    target_redirect_uri = redirect_uri or settings.GOOGLE_REDIRECT_URI
+
+    # 1. Exchange authorization code with Google Token Endpoint
+    token_url = "https://oauth2.googleapis.com/token"
+    token_payload = {
+        "code": code,
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "client_secret": settings.GOOGLE_CLIENT_SECRET,
+        "redirect_uri": target_redirect_uri,
+        "grant_type": "authorization_code"
+    }
+
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        token_resp = await client.post(token_url, data=token_payload)
+        if token_resp.status_code != 200:
+            error_details = token_resp.text
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Xác thực mã Google OAuth thất bại: {error_details}"
+            )
+        token_data = token_resp.json()
+        access_token = token_data.get("access_token")
+        id_token_jwt = token_data.get("id_token")
+
+        if not access_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không nhận được access_token từ máy chủ Google."
+            )
+
+        # 2. Fetch authenticated user profile from Google UserInfo endpoint
+        userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+        userinfo_resp = await client.get(
+            userinfo_url,
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        if userinfo_resp.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không thể trích xuất thông tin người dùng từ Google UserInfo API."
+            )
+        google_profile = userinfo_resp.json()
+
+    email = google_profile.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tài khoản Google không cung cấp địa chỉ email hợp lệ."
+        )
+
+    full_name = google_profile.get("name") or email.split("@")[0]
+    google_id = google_profile.get("sub")
+    picture = google_profile.get("picture")
+
+    # 3. Create or login student user
+    return await authenticate_google_user(
+        db,
+        GoogleLoginRequest(
+            email=email,
+            full_name=full_name,
+            google_id=google_id,
+            avatar_url=picture,
+            credential=id_token_jwt
+        )
+    )

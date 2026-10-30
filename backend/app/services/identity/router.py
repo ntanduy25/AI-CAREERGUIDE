@@ -13,6 +13,7 @@ from app.schemas.identity import (
     UserConsentCreate,
     UserConsentResponse,
     GoogleLoginRequest,
+    GoogleOAuthCallbackRequest,
 )
 from app.services.identity import service
 
@@ -64,3 +65,11 @@ async def list_consents(
 async def google_login(payload: GoogleLoginRequest, db: AsyncSession = Depends(get_db)):
     """Authenticates or automatically registers a student via Google OAuth."""
     return await service.authenticate_google_user(db, payload)
+
+@router.post("/google/callback", response_model=TokenResponse)
+async def google_oauth_callback(
+    payload: GoogleOAuthCallbackRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Handles standard Google OAuth 2.0 authorization code exchange callback."""
+    return await service.handle_google_oauth_callback(db, payload.code, payload.redirect_uri)

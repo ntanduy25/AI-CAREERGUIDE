@@ -12,6 +12,7 @@ import { AICounselorChatDrawer } from './components/ai/AICounselorChatDrawer';
 // Student & Parent Portal Pages
 import { LandingPage } from './pages/student/LandingPage';
 import { AuthPage } from './pages/student/AuthPage';
+import { GoogleCallbackPage } from './pages/student/GoogleCallbackPage';
 import { GuidanceHubPage } from './pages/student/GuidanceHubPage';
 import { AssessmentPage } from './pages/student/AssessmentPage';
 import { TranscriptPage } from './pages/student/TranscriptPage';
@@ -76,6 +77,7 @@ export const AppContent: React.FC = () => {
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<AuthPage />} />
+        <Route path="/login/callback" element={<GoogleCallbackPage />} />
         <Route path="/taxonomy" element={<TaxonomyPage />} />
 
         {/* Unified Career Guidance Hub (Trắc nghiệm + Điểm học bạ + Đề xuất ngành) */}
